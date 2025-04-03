@@ -18,7 +18,7 @@ export default function CoverLetterGenerate() {
 
     useEffect(() => {
         if (!AnlysedCV) {
-            const storedData = getFromStorage('userData');
+            const storedData = getFromStorage('userData','userData');
             if (storedData) {
                 console.log("storedData :", storedData);
                 setResponse(JSON.stringify(storedData));

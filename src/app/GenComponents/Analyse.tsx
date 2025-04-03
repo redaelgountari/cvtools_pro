@@ -13,55 +13,9 @@ import LoadingState from './LoadingState';
 import { useCookies } from 'react-cookie';
 import {getFromStorage, saveToStorage} from "../../Cookiesmv"
 import AnalyseResults from './AnalyseResults';
+import { Resume } from '../types/resume';
 
 export default function Analyse(){
-  // ... keep all the interfaces as they are ...
-  interface PersonalInfo {
-    fullName: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedin: string;
-  }
-
-  interface Skills {
-    technical: string[];
-    soft: string[];
-    languages: string[];
-  }
-
-  interface Experience {
-    title: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    responsibilities: string[];
-  }
-
-  interface Education {
-    degree: string;
-    institution: string;
-    location: string;
-    graduationYear: string;
-    relevantCourses: string[];
-  }
-
-  interface Certification {
-    name: string;
-    issuer: string;
-    year: string;
-  }
-
-  interface Resume {
-    personalInfo: PersonalInfo;
-    professionalSummary: string;
-    skills: Skills;
-    experience: Experience[];
-    education: Education[];
-    certifications: Certification[];
-  }
-
   const [response, setResponse] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -99,7 +53,7 @@ export default function Analyse(){
   - Highest Education: ${resumeData.education[0]?.degree || 'N/A'}
   - Industry Preferences: [Add user input for industry preferences]
   - Job Type: [Add user input for job type, e.g., remote, hybrid, on-site]
-  
+
   Technical Expertise:
   ${resumeData.skills.technical.join(', ')}
   
@@ -142,7 +96,8 @@ const fetchAnalysis = async () => {
   setError('');
 
   try {
-    const { data } = await axios.post("/api/gemini", { userData });
+   
+    const { data } = await axios.post("/api/gemini", { userData: userData.text });
     const cleanedData = data.text.replace(/```json|```/g, '').trim();
     const parsedData = JSON.parse(cleanedData);
 
@@ -165,6 +120,7 @@ const fetchAnalysis = async () => {
   useEffect(() => {
     if (userData) {
       fetchAnalysis();
+      console.log("userData :",userData.text)
     }
   }, [userData]);
 

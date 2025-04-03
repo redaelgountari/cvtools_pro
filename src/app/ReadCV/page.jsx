@@ -33,22 +33,18 @@ export default function Page() {
                   
                   <div className="grid lg:grid-cols-[400px,1fr] gap-6">
                     {/* Upload Section */}
-                    <Card className="h-fit">
-                      <CardHeader>
-                        <CardTitle>Upload Resume</CardTitle>
-                      </CardHeader>
-                      <CardContent>
+                    <div className="h-fit">
+                      
                         <ReadTXT />
                         <p className="text-sm text-gray-500 mt-4">
                           Upload your resume in PDF format to get detailed analysis and insights
                         </p>
-                      </CardContent>
-                    </Card>
+                    </div>
 
                     {/* Analysis Section */}
                     <div className="flex-1">
                       <Analyse />
-                      <SearchResults/>
+                      {/* <SearchResults/> */}
                     </div>
                   </div>
                 </div>

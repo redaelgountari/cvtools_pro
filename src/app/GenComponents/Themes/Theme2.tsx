@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { Resume } from '@/app/types/resume';
 
 // Register custom fonts for a more professional look
 Font.register({
@@ -14,83 +15,6 @@ Font.register({
   ],
 });
 
-interface PersonalInfo {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedin: string;
-  website?: string; // Added optional website field
-}
-
-interface Skills {
-  technical: string[];
-  soft: string[];
-  languages: string[];
-}
-
-interface Experience {
-  title: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  responsibilities: string[];
-  achievements?: string[]; // Added optional achievements field
-}
-
-interface Education {
-  degree: string;
-  institution: string;
-  location: string;
-  graduationYear: string;
-  relevantCourses: string[];
-  gpa?: string; // Added optional GPA field
-}
-
-interface Certification {
-  name: string;
-  issuer: string;
-  year: string;
-  expiryDate?: string; // Added optional expiry date
-}
-
-// interface Resume {
-//   personalInfo: PersonalInfo;
-//   professionalSummary: string;
-//   skills: Skills;
-//   experience: Experience[];
-//   education: Education[];
-//   certifications: Certification[];
-//   projects?: { // Added optional projects section
-//     title: string;
-//     description: string;
-//     technologies: string[];
-//     link?: string;
-//   }[];
-// }
-interface Resume {
-  personalInfo: PersonalInfo;
-  professionalSummary: string;
-  skills: Skills;
-  tools: string[];
-  experience: Experience[];
-  education: Education[];
-  certifications: Certification[];
-  publications: [];
-  awards: [];
-  volunteerExperience: [];
-  projects?: { // Added optional projects section
-    title: string;
-    description: string;
-    technologies: string[];
-    link?: string;
-  }[];
-  onlinePresence: [];
-  hobbies: string[];
-}
-
-// Create improved styles
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -299,7 +223,7 @@ const styles = StyleSheet.create({
 const filterNA = (value: string | undefined): string => (value && value !== 'N/A' ? value : '');
 
 // Create Document Component
-export default function Theme2({ userdata }: { userdata: Resume }) {
+export default function Theme2({ userdata, userImage }: { userdata: Resume; userImage: any }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -311,7 +235,7 @@ export default function Theme2({ userdata }: { userdata: Resume }) {
               <View style={styles.imageContainer}>
                 <Image
                   style={styles.profileImage}
-                  src="profile.jpg"
+                  src={userImage}
                 />
               </View>
               <Text style={styles.name}>{filterNA(userdata.personalInfo.fullName)}</Text>

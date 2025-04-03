@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
 const filterNA = (value: string | undefined): string => (value && value !== 'N/A' ? value : '');
 
 // Create Document Component
-export default function Theme2({ userdata }: { userdata: Resume }) {
+export default function Theme5({ userdata, userImage }: { userdata: Resume; userImage: any }) {
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>

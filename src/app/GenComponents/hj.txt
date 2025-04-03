@@ -1,75 +1,191 @@
-"use client"
+"use client";
+import React, { useContext, useState } from "react";
+import pdfToText from "react-pdftotext";
+import { ReadContext } from "./ReadContext";
+import { FileUpload } from "@/components/ui/file-upload";
 
-import React, { useContext, useEffect, useState } from 'react'
-import { ReadContext } from './ReadContext';
-import { getFromStorage } from '@/Cookiesmv';
-import Theme1 from './Themes/Theme1';
+function ReadTXT() {
+  const [extractedText, setExtractedText] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { setUserData } = useContext(ReadContext);
 
-export default function Resume() {
-    interface PersonalInfo {
-        fullName: string;
-        email: string;
-        phone: string;
-        location: string;
-        linkedin: string;
-      }
-      
-      interface Skills {
-        technical: string[];
-        soft: string[];
-        languages: string[];
-      }
-      
-      interface Experience {
-        title: string;
-        company: string;
-        location: string;
-        startDate: string;
-        endDate: string;
-        responsibilities: string[];
-      }
-      
-      interface Education {
-        degree: string;
-        institution: string;
-        location: string;
-        graduationYear: string;
-        relevantCourses: string[];
-      }
-      
-      interface Certification {
-        name: string;
-        issuer: string;
-        year: string;
-      }
-      
-      interface Resume {
-        personalInfo: PersonalInfo;
-        professionalSummary: string;
-        skills: Skills;
-        experience: Experience[];
-        education: Education[];
-        certifications: Certification[];
-      }
-    const { AnlysedCV } = useContext(ReadContext);
-    const [storedData, setstoredData] = useState<Resume | null>(null);
+  const generateStructuredPrompt = (cvText) => {
+    return `You are an advanced AI specialized in CV analysis and structured data extraction. Analyze the given CV text and return the extracted details strictly in JSON format.
 
-    useEffect(() => {
-        if (!AnlysedCV) {
-            const storedData1 = getFromStorage('userData');
-            if (storedData1) {
-                console.log("storedData :", storedData1);
-                setstoredData(storedData1 as Resume);
-            }
-        } else {
-            console.log("AnlysedCV :", AnlysedCV);
+    ### 🔹 **EXTRACTION GUIDELINES**  
+    - **Maintain consistency**: Use standard formats for dates, locations, and names.  
+    - **Ensure accuracy**: Do not misclassify information (e.g., names as skills).  
+    - **No missing fields**: If data is unavailable, use "N/A".  
+    - **Structured JSON output**: Keep array structures even for single values.  
+
+    ### 🔹 **DATA EXTRACTION RULES**  
+
+    **📌 Personal Information**  
+    - Extract: Full name, email, phone, location, LinkedIn, personal website, GitHub, and portfolio link.  
+    - If multiple names are found, prioritize the one with contact details.  
+
+    **📌 Professional Summary**  
+    - Extract a short summary (if available) highlighting key strengths, experience, or career goals.  
+
+    **📌 Experience**  
+    - Extract: Job title, company, location, start & end dates, and key responsibilities.  
+    - Ensure date format is **YYYY-MM** (or "Present" if ongoing).  
+
+    **📌 Education**  
+    - Extract: Degree, institution, location, graduation year, and relevant courses.  
+
+    **📌 Projects**  
+    - Extract: Title, description, technologies used, GitHub link, and role played.  
+
+    **📌 Skills & Tools**  
+    - **Technical Skills**: Programming languages, frameworks, and libraries.  
+    - **Soft Skills**: Communication, teamwork, leadership, etc.  
+    - **Languages**: Spoken and written languages.  
+    - **Tools**: IDEs, databases, version control, DevOps tools, and design software.  
+
+    **📌 Certifications**  
+    - Extract: Certification name, issuer, and year.  
+
+    **📌 Publications**  
+    - Extract: Title, type (Research Paper, Blog, Book), year, and link.  
+
+    **📌 Awards & Recognitions**  
+    - Extract: Name, year, and brief description of awards, competitions, or honors.  
+
+    **📌 Volunteer Experience**  
+    - Extract: Role, organization, start & end dates, and description.  
+
+    **📌 Online Presence**  
+    - Extract: Twitter, GitHub, Stack Overflow, Medium, or relevant profiles.  
+
+    **📌 Hobbies & Interests**  
+    - Extract personal interests (e.g., sports, music, travel, coding hobbies).  
+
+    ### 🔹 **EXPECTED JSON OUTPUT FORMAT**  
+    \`\`\`json
+    {
+      "personalInfo": {
+        "fullName": "",
+        "email": "",
+        "phone": "",
+        "location": "",
+        "linkedin": "",
+        "website": "",
+        "github": "",
+        "portfolio": ""
+      },
+      "professionalSummary": "",
+      "skills": {
+         "technical": [],
+         "soft": [],
+         "languages": []
+      },
+      "tools": [],
+      "experience": [
+        {
+          "title": "",
+          "company": "",
+          "location": "",
+          "startDate": "",
+          "endDate": "",
+          "responsibilities": []
         }
-    }, [AnlysedCV]);
-    
-    return (
-        <div>
-            {storedData ? <Theme1 userdata={storedData} /> : <p>Loading...</p>}
-        </div>
-    );
-    
+      ],
+      "education": [
+        {
+          "degree": "",
+          "institution": "",
+          "location": "",
+          "graduationYear": "",
+          "relevantCourses": []
+        }
+      ],
+      "certifications": [
+        {
+          "name": "",
+          "issuer": "",
+          "year": ""
+        }
+      ],
+      "publications": [
+        {
+          "title": "",
+          "publicationType": "",
+          "year": "",
+          "link": ""
+        }
+      ],
+      "awards": [
+        {
+          "name": "",
+          "year": "",
+          "description": ""
+        }
+      ],
+      "volunteerExperience": [
+        {
+          "role": "",
+          "organization": "",
+          "startDate": "",
+          "endDate": "",
+          "description": ""
+        }
+      ],
+      "projects": [
+        {
+          "title": "",
+          "description": "",
+          "technologiesUsed": [],
+          "github": "",
+          "role": ""
+        }
+      ],
+      "onlinePresence": {
+        "twitter": "",
+        "stackOverflow": "",
+        "medium": ""
+      },
+      "hobbies": []
+    }
+    \`\`\`
+
+    **Return only the structured JSON output.**  
+
+    **CV Text:**  
+    ${cvText}
+  `;
+};
+
+  const handleFileUpload = async (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const text = await pdfToText(file);
+      setExtractedText(text);
+      setUserData(generateStructuredPrompt(text));
+      console.log("Extracted Text:", text);
+    } catch (error) {
+      setError(error.message);
+      console.error("PDF Processing Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="w-full mx-auto border border-dashed bg-white dark:bg-black border-neutral-200 rounded-lg">
+        <FileUpload onChange={handleFileUpload} />
+      </div>
+
+      {isLoading && <p>Loading...</p>}
+    </div>
+  );
 }
+
+export default ReadTXT;

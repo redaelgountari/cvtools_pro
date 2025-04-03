@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
 const filterNA = (value: string | undefined): string => (value && value !== 'N/A' ? value : '');
 
 // Create Document Component
-export default function Theme4({ userdata }: { userdata: Resume }) {
+export default function Theme4({ userdata, userImage }: { userdata: Resume; userImage: any }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -362,7 +362,7 @@ export default function Theme4({ userdata }: { userdata: Resume }) {
           <View style={styles.headerImageContainer}>
             <Image
               style={styles.headerImage}
-              src="profile.jpg"
+              src={userImage}
             />
           </View>
           <View style={styles.headerInfo}>

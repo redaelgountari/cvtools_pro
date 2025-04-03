@@ -1,468 +1,382 @@
 "use client"
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { Resume } from '@/app/types/resume';
 
-interface PersonalInfo {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedin: string;
-  website: string;
-  github: string;
-  portfolio: string;
+// Font configuration
+Font.register({
+  family: 'Inter',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZg.ttf', fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYMZg.ttf', fontWeight: 600 },
+    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuDyYMZg.ttf', fontWeight: 700 },
+  ],
+});
+
+// Color palette
+const COLORS = {
+  primary: '#2563EB',  // Blue-600
+  dark: '#1E293B',     // Slate-800
+  medium: '#64748B',   // Slate-500
+  light: '#E2E8F0',    // Slate-200
+  background: '#F8FAFC' // Slate-50
+};
+
+// Create styles
+const styles = StyleSheet.create({
+  page: {
+    padding: 0,
+    fontFamily: 'Inter',
+    backgroundColor: '#FFFFFF',
+  },
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  sidebar: {
+    width: '35%',
+    padding: 30,
+    backgroundColor: COLORS.dark,
+    color: 'white',
+  },
+  mainContent: {
+    width: '65%',
+    padding: 30,
+  },
+  header: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 15,
+    borderWidth: 3,
+    borderColor: 'white',
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: 700,
+    marginBottom: 5,
+    color: 'white',
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: COLORS.light,
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sidebarSection: {
+    marginBottom: 25,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 700,
+    marginBottom: 10,
+    color: COLORS.dark,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.primary,
+    paddingBottom: 5,
+  },
+  sidebarTitle: {
+    fontSize: 14,
+    fontWeight: 700,
+    marginBottom: 10,
+    color: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.medium,
+    paddingBottom: 5,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  contactIcon: {
+    width: 12,
+    height: 12,
+    marginRight: 8,
+    color: COLORS.primary,
+  },
+  contactText: {
+    fontSize: 10,
+    color: COLORS.light,
+  },
+  skillCategory: {
+    fontSize: 12,
+    fontWeight: 600,
+    marginBottom: 5,
+    color: COLORS.light,
+  },
+  skillItem: {
+    fontSize: 10,
+    marginBottom: 5,
+    color: COLORS.light,
+  },
+  bulletList: {
+    marginLeft: 5,
+  },
+  bulletItem: {
+    fontSize: 10,
+    marginBottom: 4,
+    color: COLORS.light,
+    position: 'relative',
+    paddingLeft: 12,
+  },
+  experienceItem: {
+    marginBottom: 15,
+  },
+  experienceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  jobTitle: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: COLORS.dark,
+  },
+  jobPeriod: {
+    fontSize: 10,
+    fontWeight: 600,
+    color: COLORS.primary,
+  },
+  company: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: COLORS.medium,
+    marginBottom: 8,
+  },
+  jobDescription: {
+    fontSize: 10,
+    lineHeight: 1.4,
+    color: COLORS.dark,
+    marginBottom: 5,
+  },
+  educationItem: {
+    marginBottom: 12,
+  },
+  degree: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: COLORS.dark,
+    marginBottom: 3,
+  },
+  institution: {
+    fontSize: 11,
+    color: COLORS.medium,
+    marginBottom: 3,
+  },
+  projectItem: {
+    marginBottom: 12,
+  },
+  projectTitle: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: COLORS.dark,
+    marginBottom: 3,
+  },
+  projectDescription: {
+    fontSize: 10,
+    color: COLORS.dark,
+    marginBottom: 5,
+    lineHeight: 1.4,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 5,
+  },
+  tag: {
+    fontSize: 8,
+    backgroundColor: COLORS.background,
+    color: COLORS.medium,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginRight: 5,
+    marginBottom: 5,
+  },
+});
+
+interface Theme1Props {
+  userdata: Resume;
+  userImage: string;
 }
 
-interface Skills {
-  technical: string[];
-  soft: string[];
-  languages: string[];
-}
+const filterEmpty = (value?: string): string => (value && value !== 'N/A' ? value : '');
 
-interface Experience {
-  title: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  responsibilities: string[];
-}
+const Theme1: React.FC<Theme1Props> = ({ userdata, userImage }) => {
+  const renderContactInfo = () => (
+    <View style={styles.sidebarSection}>
+      <Text style={styles.sidebarTitle}>Contact</Text>
+      {filterEmpty(userdata.personalInfo.location) && (
+        <View style={styles.contactItem}>
+          <Text style={styles.contactText}>{userdata.personalInfo.location}</Text>
+        </View>
+      )}
+      {filterEmpty(userdata.personalInfo.phone) && (
+        <View style={styles.contactItem}>
+          <Text style={styles.contactText}>{userdata.personalInfo.phone}</Text>
+        </View>
+      )}
+      {filterEmpty(userdata.personalInfo.email) && (
+        <View style={styles.contactItem}>
+          <Text style={styles.contactText}>{userdata.personalInfo.email}</Text>
+        </View>
+      )}
+      {filterEmpty(userdata.personalInfo.linkedin) && (
+        <View style={styles.contactItem}>
+          <Text style={styles.contactText}>{userdata.personalInfo.linkedin}</Text>
+        </View>
+      )}
+      {filterEmpty(userdata.personalInfo.website) && (
+        <View style={styles.contactItem}>
+          <Text style={styles.contactText}>{userdata.personalInfo.website}</Text>
+        </View>
+      )}
+    </View>
+  );
 
-interface Education {
-  degree: string;
-  institution: string;
-  location: string;
-  graduationYear: string;
-  relevantCourses: string[];
-}
+  const renderSkills = () => (
+    <View style={styles.sidebarSection}>
+      <Text style={styles.sidebarTitle}>Skills</Text>
+      
+      {userdata.skills.technical.length > 0 && (
+        <View>
+          <Text style={styles.skillCategory}>Technical</Text>
+          <View style={styles.bulletList}>
+            {userdata.skills.technical.map((skill, index) => (
+              <Text key={index} style={styles.bulletItem}>• {skill}</Text>
+            ))}
+          </View>
+        </View>
+      )}
+      
+      {userdata.skills.soft.length > 0 && (
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.skillCategory}>Soft Skills</Text>
+          <View style={styles.bulletList}>
+            {userdata.skills.soft.map((skill, index) => (
+              <Text key={index} style={styles.bulletItem}>• {skill}</Text>
+            ))}
+          </View>
+        </View>
+      )}
+    </View>
+  );
 
-interface Certification {
-  name: string;
-  issuer: string;
-  year: string;
-}
+  const renderLanguages = () => (
+    <View style={styles.sidebarSection}>
+      <Text style={styles.sidebarTitle}>Languages</Text>
+      <View style={styles.bulletList}>
+        {userdata.skills.languages.map((language, index) => (
+          <Text key={index} style={styles.bulletItem}>• {language}</Text>
+        ))}
+      </View>
+    </View>
+  );
 
-interface Publication {
-  title: string;
-  publicationType: string;
-  year: string;
-  link: string;
-}
+  const renderExperience = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Professional Experience</Text>
+      {userdata.experience.map((exp, index) => (
+        <View key={index} style={styles.experienceItem}>
+          <View style={styles.experienceHeader}>
+            <Text style={styles.jobTitle}>{filterEmpty(exp.title)}</Text>
+            <Text style={styles.jobPeriod}>
+              {filterEmpty(exp.startDate)} - {filterEmpty(exp.endDate)}
+            </Text>
+          </View>
+          <Text style={styles.company}>
+            {filterEmpty(exp.company)} • {filterEmpty(exp.location)}
+          </Text>
+          <View style={styles.bulletList}>
+            {exp.responsibilities.map((responsibility, idx) => (
+              <Text key={idx} style={styles.jobDescription}>• {responsibility}</Text>
+            ))}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
 
-interface Award {
-  name: string;
-  year: string;
-  description: string;
-}
+  const renderEducation = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Education</Text>
+      {userdata.education.map((edu, index) => (
+        <View key={index} style={styles.educationItem}>
+          <Text style={styles.degree}>{filterEmpty(edu.degree)}</Text>
+          <Text style={styles.institution}>
+            {filterEmpty(edu.institution)} • {filterEmpty(edu.location)}
+          </Text>
+          <Text style={styles.jobPeriod}>{filterEmpty(edu.graduationYear)}</Text>
+          {edu.gpa && <Text style={styles.jobDescription}>GPA: {edu.gpa}</Text>}
+        </View>
+      ))}
+    </View>
+  );
 
-interface VolunteerExperience {
-  role: string;
-  organization: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-}
-
-interface Project {
-  title: string;
-  description: string;
-  technologiesUsed: string[];
-  github: string;
-  role: string;
-}
-
-interface OnlinePresence {
-  twitter: string;
-  stackOverflow: string;
-  medium: string;
-}
-
-interface Resume {
-  personalInfo: PersonalInfo;
-  professionalSummary: string;
-  skills: Skills;
-  tools: string[];
-  experience: Experience[];
-  education: Education[];
-  certifications: Certification[];
-  publications: Publication[];
-  awards: Award[];
-  volunteerExperience: VolunteerExperience[];
-  projects: Project[];
-  onlinePresence: OnlinePresence;
-  hobbies: string[];
-}
-
-// Create Document Component
-export default function Theme1({ userdata }: { userdata: Resume }) {
-
-  const styles = StyleSheet.create({
-    page: {
-      flexDirection: 'row',
-      backgroundColor: '#e4e4e4',
-    },
-    leftColumn: {
-      width: '35%',
-      backgroundColor: '#546e7a',
-      color: 'white',
-      padding: 10,
-    },
-    rightColumn: {
-      width: '65%',
-      padding: 10,
-    },
-    header: {
-      marginBottom: 10,
-    },
-    name: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 5,
-    },
-    title: {
-      fontSize: 14,
-      marginBottom: 10,
-      borderBottom: '1px solid #000',
-      paddingBottom: 5,
-    },
-    section: {
-      marginBottom: 15,
-    },
-    sectionTitle: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      marginBottom: 5,
-    },
-    leftSectionTitle: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      marginBottom: 5,
-      color: 'white',
-    },
-    contactItem: {
-      flexDirection: 'row',
-      marginBottom: 5,
-      fontSize: 10,
-    },
-    jobTitle: {
-      fontSize: 12,
-      fontWeight: 'bold',
-      marginBottom: 3,
-    },
-    company: {
-      fontSize: 10,
-      marginBottom: 3,
-    },
-    date: {
-      fontSize: 10,
-      marginBottom: 5,
-    },
-    bulletList: {
-      marginLeft: 10,
-    },
-    bullet: {
-      fontSize: 10,
-      marginBottom: 3,
-    },
-    profileText: {
-      fontSize: 10,
-      marginBottom: 10,
-    },
-    skillItem: {
-      fontSize: 10,
-      marginBottom: 3,
-    },
-    languageBar: {
-      height: 8,
-      backgroundColor: '#ddd',
-      marginBottom: 5,
-      width: '100%',
-    },
-    languageFill: {
-      height: 8,
-      backgroundColor: '#fff',
-    },
-    languageItem: {
-      marginBottom: 5,
-      fontSize: 10,
-    },
-    divider: {
-      borderBottom: '1px solid #ddd',
-      marginVertical: 10,
-    },
-    image: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
-      marginBottom: 10,
-      alignSelf: 'center',
-    },
-  });
+  const renderProjects = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Projects</Text>
+      {userdata.projects?.map((project, index) => (
+        <View key={index} style={styles.projectItem}>
+          <Text style={styles.projectTitle}>{project.title}</Text>
+          <Text style={styles.projectDescription}>{project.description}</Text>
+          <View style={styles.tagContainer}>
+            {project.technologies.map((tech, idx) => (
+              <Text key={idx} style={styles.tag}>{tech}</Text>
+            ))}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Left Column */}
-        <View style={styles.leftColumn}>
-          {/* Profile Image */}
-          <Image
-            style={styles.image}
-            src={`profile.jpg`}
-          />
-          
-          {/* Contact Information */}
-          <View style={styles.section}>
-            <Text style={styles.leftSectionTitle}>COORDONNÉES</Text>
-            <View style={styles.contactItem}>
-              <Text>{userdata.personalInfo.location}</Text>
+        <View style={styles.container}>
+          {/* Sidebar */}
+          <View style={styles.sidebar}>
+            <View style={styles.header}>
+              <Image style={styles.avatar} src={userImage} />
+              <Text style={styles.name}>{filterEmpty(userdata.personalInfo.fullName)}</Text>
+              {userdata.experience[0]?.title && (
+                <Text style={styles.title}>{userdata.experience[0].title}</Text>
+              )}
             </View>
-            <View style={styles.contactItem}>
-              <Text>{userdata.personalInfo.phone}</Text>
-            </View>
-            <View style={styles.contactItem}>
-              <Text>{userdata.personalInfo.email}</Text>
-            </View>
-            {userdata.personalInfo.linkedin && (
-              <View style={styles.contactItem}>
-                <Text>{userdata.personalInfo.linkedin}</Text>
+
+            {renderContactInfo()}
+            {renderSkills()}
+            {userdata.skills.languages.length > 0 && renderLanguages()}
+          </View>
+
+          {/* Main Content */}
+          <View style={styles.mainContent}>
+            {filterEmpty(userdata.professionalSummary) && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Professional Profile</Text>
+                <Text style={styles.jobDescription}>{userdata.professionalSummary}</Text>
               </View>
             )}
-            {userdata.personalInfo.website && (
-              <View style={styles.contactItem}>
-                <Text>{userdata.personalInfo.website}</Text>
-              </View>
-            )}
-            {userdata.personalInfo.github && (
-              <View style={styles.contactItem}>
-                <Text>{userdata.personalInfo.github}</Text>
-              </View>
-            )}
-            {userdata.personalInfo.portfolio && (
-              <View style={styles.contactItem}>
-                <Text>{userdata.personalInfo.portfolio}</Text>
-              </View>
-            )}
-          </View>
-          
-          {/* Skills */}
-          <View style={styles.section}>
-            <Text style={styles.leftSectionTitle}>COMPÉTENCES</Text>
-            {userdata.skills.technical.map((skill, index) => (
-              <Text key={index} style={styles.skillItem}>• {skill}</Text>
-            ))}
-            {userdata.skills.soft.map((skill, index) => (
-              <Text key={index} style={styles.skillItem}>• {skill}</Text>
-            ))}
-          </View>
-          
-          {/* Tools */}
-          <View style={styles.section}>
-            <Text style={styles.leftSectionTitle}>OUTILS</Text>
-            {userdata.tools.map((tool, index) => (
-              <Text key={index} style={styles.skillItem}>• {tool}</Text>
-            ))}
-          </View>
-          
-          {/* Languages */}
-          <View style={styles.section}>
-            <Text style={styles.leftSectionTitle}>LANGUES</Text>
-            
-            {userdata.skills?.languages?.map((language, index) => {
-            if (!language || typeof language !== "string") return null;
-            
-            const [lang, level = ""] = language.split(':').map(item => item.trim());
-            let width = '50%';
-            
-            if (level.toLowerCase().includes('native') || level.toLowerCase().includes('fluent')) {
-              width = '100%';
-            } else if (level.toLowerCase().includes('advanced')) {
-              width = '75%';
-            } else if (level.toLowerCase().includes('intermediate')) {
-              width = '50%';
-            } else {
-              width = '40%';
-            }
 
-            return (
-              <React.Fragment key={index}>
-                <Text style={styles.languageItem}>{lang}</Text>
-                <View style={styles.languageBar}>
-                  <View style={[styles.languageFill, { width }]} />
-                </View>
-                <Text style={styles.languageItem}>{level}</Text>
-              </React.Fragment>
-            );
-          })}
-
-          </View>
-          
-          {/* Certifications as Interests section */}
-          {userdata.certifications && userdata.certifications.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.leftSectionTitle}>CENTRES D'INTÉRÊT</Text>
-              {userdata.certifications.map((cert, index) => (
-                <Text key={index} style={styles.skillItem}>• {cert.name}</Text>
-              ))}
-            </View>
-          )}
-        </View>
-        
-        {/* Right Column */}
-        <View style={styles.rightColumn}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.name}>{userdata.personalInfo.fullName}</Text>
-            <Text style={styles.title}>{userdata.experience.length > 0 ? userdata.experience[0].title : "Étudiant(e)"}</Text>
-          </View>
-          
-          {/* Profile */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PROFIL PROFESSIONNEL</Text>
-            <Text style={styles.profileText}>
-              {userdata.professionalSummary}
-            </Text>
-          </View>
-          
-          {/* Professional Experience */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PARCOURS PROFESSIONNEL</Text>
-            
-            {userdata.experience.map((exp, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{exp.title}</Text>
-                <Text style={styles.company}>{exp.company} - {exp.location}</Text>
-                <Text style={styles.date}>{exp.startDate} - {exp.endDate}</Text>
-                <View style={styles.bulletList}>
-                  {exp.responsibilities.map((resp, respIndex) => (
-                    <Text key={respIndex} style={styles.bullet}>• {resp}</Text>
-                  ))}
-                </View>
-                
-                {index < userdata.experience.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-          
-          {/* Education */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>FORMATION</Text>
-            
-            {userdata.education.map((edu, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{edu.degree}</Text>
-                <Text style={styles.company}>{edu.institution} - {edu.location}</Text>
-                <Text style={styles.date}>{edu.graduationYear}</Text>
-                
-                {index < userdata.education.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Certifications */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>CERTIFICATIONS</Text>
-            
-            {userdata.certifications.map((cert, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{cert.name}</Text>
-                <Text style={styles.company}>{cert.issuer}</Text>
-                <Text style={styles.date}>{cert.year}</Text>
-                
-                {index < userdata.certifications.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Publications */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PUBLICATIONS</Text>
-            
-            {userdata.publications.map((pub, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{pub.title}</Text>
-                <Text style={styles.company}>{pub.publicationType}</Text>
-                <Text style={styles.date}>{pub.year}</Text>
-                <Text style={styles.company}>{pub.link}</Text>
-                
-                {index < userdata.publications.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Awards */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PRIX ET DISTINCTIONS</Text>
-            
-            {userdata.awards.map((award, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{award.name}</Text>
-                <Text style={styles.date}>{award.year}</Text>
-                <Text style={styles.company}>{award.description}</Text>
-                
-                {index < userdata.awards.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Volunteer Experience */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>EXPÉRIENCE BÉNÉVOLE</Text>
-            
-            {userdata.volunteerExperience.map((volunteer, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{volunteer.role}</Text>
-                <Text style={styles.company}>{volunteer.organization}</Text>
-                <Text style={styles.date}>{volunteer.startDate} - {volunteer.endDate}</Text>
-                <Text style={styles.company}>{volunteer.description}</Text>
-                
-                {index < userdata.volunteerExperience.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Projects */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PROJETS</Text>
-            
-            {userdata.projects.map((project, index) => (
-              <React.Fragment key={index}>
-                <Text style={styles.jobTitle}>{project.title}</Text>
-                <Text style={styles.company}>{project.description}</Text>
-                <Text style={styles.date}>{project.technologiesUsed.join(', ')}</Text>
-                <Text style={styles.company}>{project.github}</Text>
-                <Text style={styles.company}>{project.role}</Text>
-                
-                {index < userdata.projects.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </View>
-
-          {/* Online Presence */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PRÉSENCE EN LIGNE</Text>
-            
-            {userdata.onlinePresence.twitter && (
-              <Text style={styles.company}>Twitter: {userdata.onlinePresence.twitter}</Text>
-            )}
-            {userdata.onlinePresence.stackOverflow && (
-              <Text style={styles.company}>Stack Overflow: {userdata.onlinePresence.stackOverflow}</Text>
-            )}
-            {userdata.onlinePresence.medium && (
-              <Text style={styles.company}>Medium: {userdata.onlinePresence.medium}</Text>
-            )}
-          </View>
-
-          {/* Hobbies */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>LOISIRS</Text>
-            
-            {userdata.hobbies.map((hobby, index) => (
-              <Text key={index} style={styles.skillItem}>• {hobby}</Text>
-            ))}
+            {userdata.experience.length > 0 && renderExperience()}
+            {userdata.education.length > 0 && renderEducation()}
+            {userdata.projects?.length > 0 && renderProjects()}
           </View>
         </View>
       </Page>
     </Document>
   );
-}
+};
+
+export default Theme1;

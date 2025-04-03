@@ -543,7 +543,7 @@ const getLanguageProficiency = (language: string): [string, number] => {
 };
 
 // Main component with improved handling of any data
-export default function ModernResume({ userdata }: { userdata: Resume }) {
+export default function Theme3({ userdata, userImage }: { userdata: Resume; userImage: any }) {
   // Defensive programming - ensure we have valid data
   const data: Resume = {
     personalInfo: userdata.personalInfo || {
@@ -604,11 +604,13 @@ export default function ModernResume({ userdata }: { userdata: Resume }) {
             <View style={styles.headerLeft}>
               {/* Profile Image Container with fallback */}
               <View style={styles.profileImageContainer}>
-                {isValidValue(data.personalInfo.profileImage) ? (
-                  <Image src={data.personalInfo.profileImage} style={styles.profileImage} />
+                {/* {isValidValue(data.personalInfo.profileImage) ? (
+                  <Image src={userImage} style={styles.profileImage} />
                 ) : (
                   <View style={styles.profilePlaceholder} />
-                )}
+                )} */}
+                  <Image src={userImage} style={styles.profileImage} />
+
               </View>
               
               <View style={styles.nameTitle}>

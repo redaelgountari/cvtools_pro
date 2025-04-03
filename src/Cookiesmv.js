@@ -26,12 +26,107 @@ export function saveToStorage(key, data, expiryDays = null) {
     
     // Save to localStorage
     localStorage.setItem(key, JSON.stringify(storageItem));
-    return true;
+    // return true;
   } catch (error) {
     console.error('Error saving to localStorage:', error);
     return false;
   }
 }
+
+export function saveSettings(key, data, expiryDays = null) {
+  try {
+    // Create storage object
+    const storageItem = {
+      data: data,
+      timestamp: new Date().getTime()
+    };
+    
+    // Add expiration if specified
+    if (expiryDays !== null) {
+      storageItem.expiry = new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem(key, JSON.stringify(storageItem));
+    // return true;
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+    return false;
+  }
+}
+
+export function saveImageToStorage(key, imageFiles, expiryDays = 7) {
+  try {
+    // Convert image files to base64
+    const base64Images = [];
+
+    const convertToBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+    };
+
+    // If imageFiles is an array of file paths from the server
+    if (typeof imageFiles[0] === 'string') {
+      // Fetch and convert server images to base64
+      const fetchImagePromises = imageFiles.map(async (imagePath) => {
+        try {
+          const response = await fetch(`http://localhost:8000/extract-images/${imagePath}`);
+          const blob = await response.blob();
+          return await convertToBase64(blob);
+        } catch (error) {
+          console.error('Error fetching image:', error);
+          return null;
+        }
+      });
+
+      Promise.all(fetchImagePromises)
+        .then((base64Results) => {
+          // Filter out any null results
+          const validBase64Images = base64Results.filter(img => img !== null);
+          
+          // Create storage item with base64 images
+          const storageItem = {
+            data: validBase64Images,
+            timestamp: new Date().getTime(),
+            expiry: expiryDays ? new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000) : null
+          };
+
+          // Store in localStorage
+          localStorage.setItem(key, JSON.stringify(storageItem));
+        })
+        .catch(error => {
+          console.error('Error converting images:', error);
+        });
+    } 
+    // If imageFiles is already a File object or Blob
+    else {
+      const convertFilesToBase64 = async () => {
+        const base64Promises = imageFiles.map(convertToBase64);
+        const base64Results = await Promise.all(base64Promises);
+
+        const storageItem = {
+          data: base64Results,
+          timestamp: new Date().getTime(),
+          expiry: expiryDays ? new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000) : null
+        };
+
+        localStorage.setItem(key, JSON.stringify(storageItem));
+      };
+
+      convertFilesToBase64();
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error saving images to localStorage:', error);
+    return false;
+  }
+}
+
 
 /**
  * Retrieves data from localStorage, checking for expiration

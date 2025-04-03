@@ -13,8 +13,8 @@ import Coverlettergenarate from '../GenComponents/Coverlettergenarate'
 export default function page() {
   const [data, setdata] = useState('')
   useEffect(() => {
-    setdata(getFromStorage('userData'))
-    console.log("data5 :", getFromStorage('userData'))
+    setdata(getFromStorage('userData','userData'))
+    setdata(getFromStorage('userData','userImage'))
   }, [])
   return (
     <div className="flex flex-col min-h-screen">
