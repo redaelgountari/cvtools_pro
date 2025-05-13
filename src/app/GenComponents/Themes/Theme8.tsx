@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
 // Helper function to filter out N/A values
 const filterNA = (value: string | undefined): string => (value && value !== 'N/A' ? value : '');
 
-export default function CanadianStyleResume({ userdata, userImage }: { userdata: Resume; userImage: any }) {
+export default function Theme8({ userdata, userImage }: { userdata: Resume; userImage: any }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>

@@ -265,7 +265,7 @@ interface SterlingCooperCVProps {
 
 const filterEmpty = (value?: string): string => (value && value !== 'N/A' ? value : '');
 
-const SterlingCooperCV: React.FC<SterlingCooperCVProps> = ({ userdata, userImage }) => {
+const Theme10: React.FC<SterlingCooperCVProps> = ({ userdata, userImage }) => {
   // Function to render skill bar with level
   const renderSkillBar = (level: number) => {
     const percentage = Math.min(Math.max(level, 0), 100);
@@ -443,4 +443,4 @@ const SterlingCooperCV: React.FC<SterlingCooperCVProps> = ({ userdata, userImage
   );
 };
 
-export default SterlingCooperCV;
+export default Theme10;

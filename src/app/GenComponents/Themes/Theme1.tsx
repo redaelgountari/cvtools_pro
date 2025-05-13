@@ -249,7 +249,7 @@ const Theme1: React.FC<Theme1Props> = ({ userdata, userImage }) => {
     <View style={styles.sidebarSection}>
       <Text style={styles.sidebarTitle}>Skills</Text>
       
-      {userdata.skills.technical.length > 0 && (
+      {userdata.skills?.technical?.length > 0 && (
         <View>
           <Text style={styles.skillCategory}>Technical</Text>
           <View style={styles.bulletList}>
@@ -260,7 +260,7 @@ const Theme1: React.FC<Theme1Props> = ({ userdata, userImage }) => {
         </View>
       )}
       
-      {userdata.skills.soft.length > 0 && (
+      {userdata.skills?.soft?.length > 0 && (
         <View style={{ marginTop: 10 }}>
           <Text style={styles.skillCategory}>Soft Skills</Text>
           <View style={styles.bulletList}>
@@ -277,7 +277,7 @@ const Theme1: React.FC<Theme1Props> = ({ userdata, userImage }) => {
     <View style={styles.sidebarSection}>
       <Text style={styles.sidebarTitle}>Languages</Text>
       <View style={styles.bulletList}>
-        {userdata.skills.languages.map((language, index) => (
+        {userdata.skills?.languages?.map((language, index) => (
           <Text key={index} style={styles.bulletItem}>• {language}</Text>
         ))}
       </View>
@@ -287,7 +287,7 @@ const Theme1: React.FC<Theme1Props> = ({ userdata, userImage }) => {
   const renderExperience = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Professional Experience</Text>
-      {userdata.experience.map((exp, index) => (
+      {userdata.experience?.map((exp, index) => (
         <View key={index} style={styles.experienceItem}>
           <View style={styles.experienceHeader}>
             <Text style={styles.jobTitle}>{filterEmpty(exp.title)}</Text>
@@ -311,7 +311,7 @@ const Theme1: React.FC<Theme1Props> = ({ userdata, userImage }) => {
   const renderEducation = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Education</Text>
-      {userdata.education.map((edu, index) => (
+      {userdata.education?.map((edu, index) => (
         <View key={index} style={styles.educationItem}>
           <Text style={styles.degree}>{filterEmpty(edu.degree)}</Text>
           <Text style={styles.institution}>

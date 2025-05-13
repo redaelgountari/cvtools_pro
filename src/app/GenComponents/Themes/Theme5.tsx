@@ -1,98 +1,65 @@
 "use client"
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet ,Font} from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Resume } from '@/app/types/resume';
 
-// Register custom fonts for a professional look
+// Register custom fonts with multi-language support
 Font.register({
-  family: 'Open Sans',
+  family: 'Noto Sans',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/opensans/v28/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4gaVc.ttf', fontWeight: 'normal' },
-    { src: 'https://fonts.gstatic.com/s/opensans/v28/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4gaVc.ttf', fontWeight: 'bold' },
-    { src: 'https://fonts.gstatic.com/s/opensans/v28/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4gaVc.ttf', fontWeight: 'semibold' },
-    { src: 'https://fonts.gstatic.com/s/opensans/v28/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsin9M4gaVc.ttf', fontStyle: 'italic' },
+    { src: 'https://fonts.gstatic.com/s/notosans/v30/o-0IIpQlx3QUlC5A4PNr5TRA.ttf', fontWeight: 'normal' },
+    { src: 'https://fonts.gstatic.com/s/notosans/v30/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf', fontWeight: 'bold' },
   ],
 });
 
-interface PersonalInfo {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedin: string;
-  website?: string;
-}
+// Arabic font support - using better Arabic font support
+Font.register({
+  family: 'Noto Sans Arabic',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/notosansarabic/v18/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyG2vu3CBFQLaig.ttf', fontWeight: 'normal' },
+    { src: 'https://fonts.gstatic.com/s/notosansarabic/v18/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyG2vu3CBFQLaig.ttf', fontWeight: 'bold' },
+  ],
+});
 
-interface Skills {
-  technical: string[];
-  soft: string[];
-  languages: string[];
-}
-
-interface Experience {
-  title: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  responsibilities: string[];
-  achievements?: string[];
-}
-
-interface Education {
-  degree: string;
-  institution: string;
-  location: string;
-  graduationYear: string;
-  relevantCourses: string[];
-  gpa?: string;
-}
-
-interface Certification {
-  name: string;
-  issuer: string;
-  year: string;
-  expiryDate?: string;
-}
-
-interface Resume {
-  personalInfo: PersonalInfo;
-  professionalSummary: string;
-  skills: Skills;
-  tools: string[];
-  experience: Experience[];
-  education: Education[];
-  certifications: Certification[];
-  publications: [];
-  awards: [];
-  volunteerExperience: [];
-  projects?: {
-    title: string;
-    description: string;
-    technologies: string[];
-    link?: string;
-  }[];
-  onlinePresence: [];
-  hobbies: string[];
-}
-
-// Create styles for Canadian resume
-const styles = StyleSheet.create({
+// Create a dynamic stylesheet function that takes direction as parameter
+const createStyles = (isRTL) => StyleSheet.create({
   page: {
-    padding: 40,
-    fontFamily: 'Open Sans',
+    padding: 20,
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
     backgroundColor: '#FFFFFF',
+    fontSize: 12,
+    direction: isRTL ? 'rtl' : 'ltr',
+    textAlign: isRTL ? 'right' : 'left',
   },
   header: {
-    marginBottom: 20,
-    borderBottom: '2px solid #2D3748',
-    paddingBottom: 10,
+    marginBottom: 9,
+    borderBottom: '1px solid #2D3748',
+    paddingBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  imageContainer: {
+    width: 60,
+    height: 60,
+    marginLeft: isRTL ? 0 : 10,
+    marginRight: isRTL ? 10 : 0,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    objectFit: 'cover',
   },
   name: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#2D3748',
-    marginBottom: 5,
+    marginBottom: 4,
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   contactInfo: {
     flexDirection: 'row',
@@ -101,66 +68,62 @@ const styles = StyleSheet.create({
     color: '#4A5568',
   },
   contactItem: {
-    marginRight: 15,
+    marginRight: isRTL ? 0 : 8,
+    marginLeft: isRTL ? 8 : 0,
     marginBottom: 3,
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   section: {
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2D3748',
-    borderBottom: '1px solid #E2E8F0',
-    paddingBottom: 3,
     marginBottom: 8,
-  },
-  summary: {
-    fontSize: 11,
-    lineHeight: 1.5,
-    color: '#4A5568',
-    marginBottom: 10,
-    textAlign: 'justify',
   },
   skillsContainer: {
     flexDirection: 'column',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   skillCategory: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'semibold',
     marginBottom: 3,
     color: '#4A5568',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#2D3748',
+    borderBottom: '1px solid #E2E8F0',
+    paddingBottom: 2,
+    marginBottom: 6,
+    // Keep section titles in selected language font regardless of content language
+    fontFamily: 'Noto Sans',
+  },
+  summary: {
+    fontSize: 10,
+    lineHeight: 1.4,
+    color: '#4A5568',
+    marginBottom: 6,
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   skillRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   skillItem: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#4A5568',
     backgroundColor: '#F7FAFC',
     padding: '2 5',
     borderRadius: 3,
-    marginRight: 5,
+    marginRight: isRTL ? 0 : 5,
+    marginLeft: isRTL ? 5 : 0,
     marginBottom: 5,
-    borderColor: '#E2E8F0',
     borderWidth: 1,
-  },
-  toolsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 5,
-  },
-  toolItem: {
-    fontSize: 10,
-    color: '#4A5568',
-    marginRight: 10,
-    marginBottom: 3,
+    borderColor: '#E2E8F0',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   experienceItem: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   experienceHeader: {
     flexDirection: 'row',
@@ -171,160 +134,186 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     color: '#2D3748',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   jobPeriod: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#718096',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   company: {
     fontSize: 11,
-    fontWeight: 'semibold',
-    marginBottom: 4,
+    fontWeight: 'bold',
     color: '#4A5568',
-  },
-  bulletList: {
-    marginLeft: 10,
+    marginBottom: 3,
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   bulletPoint: {
-    fontSize: 10,
-    marginLeft: 10,
+    fontSize: 9,
+    marginLeft: isRTL ? 0 : 8,
+    marginRight: isRTL ? 8 : 0,
     marginBottom: 3,
     color: '#4A5568',
-  },
-  achievementText: {
-    fontSize: 10,
-    fontStyle: 'italic',
-    color: '#38A169',
-    marginLeft: 10,
-    marginBottom: 3,
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   educationItem: {
-    marginBottom: 10,
-  },
-  educationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: 5,
   },
   degree: {
     fontSize: 11,
     fontWeight: 'bold',
     color: '#2D3748',
-  },
-  graduationYear: {
-    fontSize: 10,
-    color: '#718096',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   institution: {
-    fontSize: 10,
-    marginBottom: 3,
+    fontSize: 9,
+    marginTop: 1,
     color: '#4A5568',
-  },
-  certificationItem: {
-    marginBottom: 5,
-  },
-  certificationName: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#2D3748',
-  },
-  certificationDetails: {
-    fontSize: 10,
-    color: '#4A5568',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   projectItem: {
-    marginBottom: 8,
+    marginBottom: 5,
   },
   projectTitle: {
     fontSize: 11,
     fontWeight: 'bold',
     color: '#2D3748',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
   projectDescription: {
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: 9,
+    marginTop: 1,
     marginBottom: 3,
     color: '#4A5568',
-  },
-  projectTech: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  projectTechItem: {
-    fontSize: 9,
-    color: '#4A5568',
-    backgroundColor: '#F7FAFC',
-    padding: 2,
-    borderRadius: 3,
-    marginRight: 3,
-    marginBottom: 3,
-    borderColor: '#E2E8F0',
-    borderWidth: 1,
-  },
-  projectLink: {
-    fontSize: 9,
-    color: '#3182CE',
-    textDecoration: 'underline',
-  },
-  languageSection: {
-    marginBottom: 5,
-  },
-  languageItem: {
-    fontSize: 10,
-    marginBottom: 2,
-    color: '#4A5568',
+    fontFamily: isRTL ? 'Noto Sans Arabic' : 'Noto Sans',
   },
 });
 
-// Helper function to filter out N/A values
 const filterNA = (value: string | undefined): string => (value && value !== 'N/A' ? value : '');
 
-// Create Document Component
-export default function Theme5({ userdata, userImage }: { userdata: Resume; userImage: any }) {
+// Dictionary for section titles in different languages
+const sectionTitles = {
+  en: {
+    professionalProfile: 'Professional Profile',
+    skills: 'Skills',
+    technicalSkills: 'Technical Skills',
+    tools: 'Tools',
+    experience: 'Professional Experience',
+    education: 'Education',
+    projects: 'Projects',
+    languages: 'Languages'
+  },
+  fr: {
+    professionalProfile: 'Profil Professionnel',
+    skills: 'Compétences',
+    technicalSkills: 'Compétences Techniques',
+    tools: 'OUTILS',
+    experience: 'Expérience Professionnelle',
+    education: 'Formation',
+    projects: 'Projets',
+    languages: 'Langues'
+  },
+  ar: {
+    professionalProfile: 'الملف المهني',
+    skills: 'المهارات',
+    technicalSkills: 'المهارات التقنية',
+    tools: 'الأدوات',
+    experience: 'الخبرة المهنية',
+    education: 'التعليم',
+    projects: 'المشاريع',
+    languages: 'اللغات'
+  }
+};
+
+interface Theme5Props {
+  userdata: Resume;
+  userImage: any;
+  language?: 'en' | 'fr' | 'ar';  // Support for English, French, Arabic
+  rtl?: boolean;  // Explicit RTL support
+  contentLanguage?: 'en' | 'fr' | 'ar'; // New prop to control content language independently
+}
+
+export default function Theme5({ 
+  userdata, 
+  userImage, 
+  language = 'en',
+  rtl = false,  // Don't auto-set RTL based on language to allow more control
+  contentLanguage = 'ar'  // Default to Arabic for content as requested
+}: Theme5Props) {
+  // Get the section titles based on language, default to English if not found
+  const titles = sectionTitles[language] || sectionTitles.en;
+  
+  // If content is Arabic, enforce RTL for layout
+  const useRTL = rtl || contentLanguage === 'ar';
+  
+  // Create styles based on text direction
+  const styles = createStyles(useRTL);
+
+  // Choose font family based on content language
+  const contentFontFamily = contentLanguage === 'ar' ? 'Noto Sans Arabic' : 'Noto Sans';
+
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>
-        {/* Header with Name and Contact Information */}
         <View style={styles.header}>
-          <Text style={styles.name}>{filterNA(userdata.personalInfo.fullName)}</Text>
-          <View style={styles.contactInfo}>
-            {filterNA(userdata.personalInfo.location) && (
-              <Text style={styles.contactItem}>{userdata.personalInfo.location}</Text>
-            )}
-            {filterNA(userdata.personalInfo.phone) && (
-              <Text style={styles.contactItem}>{userdata.personalInfo.phone}</Text>
-            )}
-            {filterNA(userdata.personalInfo.email) && (
-              <Text style={styles.contactItem}>{userdata.personalInfo.email}</Text>
-            )}
-            {filterNA(userdata.personalInfo.linkedin) && (
-              <Text style={styles.contactItem}>{userdata.personalInfo.linkedin}</Text>
-            )}
-            {filterNA(userdata.personalInfo.website) && (
-              <Text style={styles.contactItem}>{userdata.personalInfo.website}</Text>
-            )}
-          </View>
+          {!useRTL && (
+            <View style={styles.headerContent}>
+              <Text style={styles.name}>{filterNA(userdata.personalInfo.fullName)}</Text>
+              <View style={styles.contactInfo}>
+                {[ 
+                  userdata.personalInfo.location,
+                  userdata.personalInfo.phone,
+                  userdata.personalInfo.email,
+                  userdata.personalInfo.linkedin,
+                  userdata.personalInfo.website
+                ].filter(Boolean).map((item, index) => (
+                  <Text key={index} style={styles.contactItem}>{item}</Text>
+                ))}
+              </View>
+            </View>
+          )}
+          
+          {userImage && (
+            <View style={styles.imageContainer}>
+              <Image style={styles.image} src={userImage} />
+            </View>
+          )}
+          
+          {useRTL && (
+            <View style={styles.headerContent}>
+              <Text style={styles.name}>{filterNA(userdata.personalInfo.fullName)}</Text>
+              <View style={styles.contactInfo}>
+                {[ 
+                  userdata.personalInfo.location,
+                  userdata.personalInfo.phone,
+                  userdata.personalInfo.email,
+                  userdata.personalInfo.linkedin,
+                  userdata.personalInfo.website
+                ].filter(Boolean).map((item, index) => (
+                  <Text key={index} style={styles.contactItem}>{item}</Text>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
 
-        {/* Professional Summary */}
-        {filterNA(userdata.professionalSummary) && (
+        {userdata.professionalSummary && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Professional Summary</Text>
-            <Text style={styles.summary}>{userdata.professionalSummary}</Text>
+            <Text style={styles.sectionTitle}>{titles.professionalProfile}</Text>
+            <Text style={{...styles.summary, fontFamily: contentFontFamily}}>{userdata.professionalSummary}</Text>
           </View>
         )}
 
-        {/* Skills Section */}
         {(userdata.skills.technical.length > 0 || userdata.skills.soft.length > 0) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skills</Text>
+            <Text style={styles.sectionTitle}>{titles.skills}</Text>
             
             {userdata.skills.technical.length > 0 && (
               <View style={styles.skillsContainer}>
-                <Text style={styles.skillCategory}>Technical Skills</Text>
+                <Text style={styles.skillCategory}>{titles.technicalSkills}</Text>
                 <View style={styles.skillRow}>
                   {userdata.skills.technical.map((skill, index) => (
-                    <Text key={index} style={styles.skillItem}>{skill}</Text>
+                    <Text key={index} style={{...styles.skillItem, fontFamily: contentFontFamily}}>{skill}</Text>
                   ))}
                 </View>
               </View>
@@ -332,135 +321,76 @@ export default function Theme5({ userdata, userImage }: { userdata: Resume; user
             
             {userdata.skills.soft.length > 0 && (
               <View style={styles.skillsContainer}>
-                <Text style={styles.skillCategory}>Transferable Skills</Text>
+                <Text style={styles.skillCategory}>{titles.tools}</Text>
                 <View style={styles.skillRow}>
                   {userdata.skills.soft.map((skill, index) => (
-                    <Text key={index} style={styles.skillItem}>{skill}</Text>
+                    <Text key={index} style={{...styles.skillItem, fontFamily: contentFontFamily}}>{skill}</Text>
                   ))}
                 </View>
               </View>
             )}
           </View>
         )}
-
-        {/* Tools Section */}
-        {userdata.tools && userdata.tools.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tools & Technologies</Text>
-            <View style={styles.toolsRow}>
-              {userdata.tools.map((tool, index) => (
-                <Text key={index} style={styles.toolItem}>• {tool}</Text>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Experience */}
+        
         {userdata.experience.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Professional Experience</Text>
+            <Text style={styles.sectionTitle}>{titles.experience}</Text>
             {userdata.experience.map((exp, index) => (
               <View key={index} style={styles.experienceItem}>
                 <View style={styles.experienceHeader}>
-                  <Text style={styles.jobTitle}>{filterNA(exp.title)}</Text>
-                  <Text style={styles.jobPeriod}>{filterNA(exp.startDate)} - {filterNA(exp.endDate)}</Text>
+                  <Text style={{...styles.jobTitle, fontFamily: contentFontFamily}}>{filterNA(exp.title)}</Text>
+                  <Text style={{...styles.jobPeriod, fontFamily: contentFontFamily}}>{filterNA(exp.startDate)} - {filterNA(exp.endDate)}</Text>
                 </View>
-                <Text style={styles.company}>{filterNA(exp.company)}, {filterNA(exp.location)}</Text>
-                {exp.responsibilities.length > 0 && (
-                  <View style={styles.bulletList}>
-                    {exp.responsibilities.map((responsibility, idx) => (
-                      <Text key={idx} style={styles.bulletPoint}>• {responsibility}</Text>
-                    ))}
-                  </View>
-                )}
-                {exp.achievements && exp.achievements.length > 0 && (
-                  <View style={styles.bulletList}>
-                    {exp.achievements.map((achievement, idx) => (
-                      <Text key={idx} style={styles.achievementText}>✓ {achievement}</Text>
-                    ))}
-                  </View>
-                )}
+                <Text style={{...styles.company, fontFamily: contentFontFamily}}>
+                  {filterNA(exp.company)}, {filterNA(exp.location)}
+                </Text>
+                {exp.responsibilities.map((responsibility, idx) => (
+                  <Text key={idx} style={{...styles.bulletPoint, fontFamily: contentFontFamily}}>• {responsibility}</Text>
+                ))}
               </View>
             ))}
           </View>
         )}
 
-        {/* Education */}
         {userdata.education.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Education</Text>
+            <Text style={styles.sectionTitle}>{titles.education}</Text>
             {userdata.education.map((edu, index) => (
               <View key={index} style={styles.educationItem}>
-                <View style={styles.educationHeader}>
-                  <Text style={styles.degree}>{filterNA(edu.degree)}</Text>
-                  <Text style={styles.graduationYear}>{filterNA(edu.graduationYear)}</Text>
-                </View>
-                <Text style={styles.institution}>{filterNA(edu.institution)}, {filterNA(edu.location)}</Text>
-                {edu.relevantCourses && edu.relevantCourses.length > 0 && (
-                  <View style={styles.bulletList}>
-                    <Text style={styles.skillCategory}>Relevant Coursework:</Text>
-                    {edu.relevantCourses.map((course, idx) => (
-                      <Text key={idx} style={styles.bulletPoint}>• {course}</Text>
-                    ))}
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Certifications */}
-        {userdata.certifications && userdata.certifications.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Certifications</Text>
-            {userdata.certifications.map((cert, index) => (
-              <View key={index} style={styles.certificationItem}>
-                <Text style={styles.certificationName}>{filterNA(cert.name)}</Text>
-                <Text style={styles.certificationDetails}>
-                  {filterNA(cert.issuer)}, {filterNA(cert.year)}
-                  {cert.expiryDate && ` (Valid until ${cert.expiryDate})`}
+                <Text style={{...styles.degree, fontFamily: contentFontFamily}}>
+                  {filterNA(edu.degree)} - {filterNA(edu.graduationYear)}
+                </Text>
+                <Text style={{...styles.institution, fontFamily: contentFontFamily}}>
+                  {filterNA(edu.institution)}, {filterNA(edu.location)}
                 </Text>
               </View>
             ))}
           </View>
         )}
 
-        {/* Projects */}
         {userdata.projects && userdata.projects.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Projects</Text>
+            <Text style={styles.sectionTitle}>{titles.projects}</Text>
             {userdata.projects.map((project, index) => (
               <View key={index} style={styles.projectItem}>
-                <Text style={styles.projectTitle}>{project.title}</Text>
-                <Text style={styles.projectDescription}>{project.description}</Text>
-                <View style={styles.projectTech}>
+                <Text style={{...styles.projectTitle, fontFamily: contentFontFamily}}>{project.title}</Text>
+                <Text style={{...styles.projectDescription, fontFamily: contentFontFamily}}>{project.description}</Text>
+                <View style={styles.skillRow}>
                   {project.technologies.map((tech, idx) => (
-                    <Text key={idx} style={styles.projectTechItem}>{tech}</Text>
+                    <Text key={idx} style={{...styles.skillItem, fontFamily: contentFontFamily}}>{tech}</Text>
                   ))}
                 </View>
-                {project.link && <Text style={styles.projectLink}>{project.link}</Text>}
               </View>
             ))}
           </View>
         )}
 
-        {/* Languages */}
         {userdata.skills.languages.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Languages</Text>
-            {userdata.skills.languages.map((language, index) => (
-              <Text key={index} style={styles.languageItem}>• {language}</Text>
-            ))}
-          </View>
-        )}
-        
-        {/* Additional Interests/Hobbies (if appropriate) */}
-        {userdata.hobbies && userdata.hobbies.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Additional Interests</Text>
+            <Text style={styles.sectionTitle}>{titles.languages}</Text>
             <View style={styles.skillRow}>
-              {userdata.hobbies.map((hobby, index) => (
-                <Text key={index} style={styles.skillItem}>{hobby}</Text>
+              {userdata.skills.languages.map((language, index) => (
+                <Text key={index} style={{...styles.skillItem, fontFamily: contentFontFamily}}>{language}</Text>
               ))}
             </View>
           </View>

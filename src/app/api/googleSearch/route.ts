@@ -89,12 +89,10 @@ export async function POST(request: NextRequest) {
       }[filters.publicationDate] || ""
     : "";
     
-    // Apply location filter
     const locationFilter = filters.location 
       ? `"${filters.location}"` 
       : "";
 
-    // Combine all query components
     const queryComponents = [
       baseQuery,
       query,
@@ -111,10 +109,9 @@ export async function POST(request: NextRequest) {
     url.searchParams.append("cx", SEARCH_ENGINE_ID);
     url.searchParams.append("q", queryComponents);
     
-    // Add pagination parameters
-    url.searchParams.append("num", String(RESULTS_PER_PAGE));  // Number of results per page
-    url.searchParams.append("start", String((page - 1) * RESULTS_PER_PAGE + 1));  // Starting index
-    url.searchParams.append("sort", "date");  // Sort by date
+    url.searchParams.append("num", String(RESULTS_PER_PAGE));  
+    url.searchParams.append("start", String((page - 1) * RESULTS_PER_PAGE + 1));
+    url.searchParams.append("sort", "date");
 
     console.log("Final Search URL:", url.toString());
 

@@ -95,10 +95,8 @@ const RechercheOffres = () => {
     loadResumeData();
   }, [AnlysedCV]);
 
-  // Previous useEffect and methods remain the same
   useEffect(() => {
     handleSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeData]);
 
   const handleSearch = async (e?: FormEvent, page = 1) => {
@@ -179,7 +177,6 @@ const RechercheOffres = () => {
     <div className="w-full max-w-6xl mx-auto p-4 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
         
-
         <Card className="shadow-2xl border-0 rounded-2xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6">
             <div className="flex justify-between items-center">
@@ -236,7 +233,7 @@ const RechercheOffres = () => {
             </div>
 
               {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-100 p-4 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-lg">
                   {[
                     {
                       icon: <Briefcase className="mr-2 h-5 w-5 text-blue-600" />,

@@ -1,191 +1,758 @@
-"use client";
-import React, { useContext, useState } from "react";
-import pdfToText from "react-pdftotext";
-import { ReadContext } from "./ReadContext";
-import { FileUpload } from "@/components/ui/file-upload";
+// Modified components focusing on user experience and adding empty fields functionality
 
-function ReadTXT() {
-  const [extractedText, setExtractedText] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const { setUserData } = useContext(ReadContext);
-
-  const generateStructuredPrompt = (cvText) => {
-    return `You are an advanced AI specialized in CV analysis and structured data extraction. Analyze the given CV text and return the extracted details strictly in JSON format.
-
-    ### 🔹 **EXTRACTION GUIDELINES**  
-    - **Maintain consistency**: Use standard formats for dates, locations, and names.  
-    - **Ensure accuracy**: Do not misclassify information (e.g., names as skills).  
-    - **No missing fields**: If data is unavailable, use "N/A".  
-    - **Structured JSON output**: Keep array structures even for single values.  
-
-    ### 🔹 **DATA EXTRACTION RULES**  
-
-    **📌 Personal Information**  
-    - Extract: Full name, email, phone, location, LinkedIn, personal website, GitHub, and portfolio link.  
-    - If multiple names are found, prioritize the one with contact details.  
-
-    **📌 Professional Summary**  
-    - Extract a short summary (if available) highlighting key strengths, experience, or career goals.  
-
-    **📌 Experience**  
-    - Extract: Job title, company, location, start & end dates, and key responsibilities.  
-    - Ensure date format is **YYYY-MM** (or "Present" if ongoing).  
-
-    **📌 Education**  
-    - Extract: Degree, institution, location, graduation year, and relevant courses.  
-
-    **📌 Projects**  
-    - Extract: Title, description, technologies used, GitHub link, and role played.  
-
-    **📌 Skills & Tools**  
-    - **Technical Skills**: Programming languages, frameworks, and libraries.  
-    - **Soft Skills**: Communication, teamwork, leadership, etc.  
-    - **Languages**: Spoken and written languages.  
-    - **Tools**: IDEs, databases, version control, DevOps tools, and design software.  
-
-    **📌 Certifications**  
-    - Extract: Certification name, issuer, and year.  
-
-    **📌 Publications**  
-    - Extract: Title, type (Research Paper, Blog, Book), year, and link.  
-
-    **📌 Awards & Recognitions**  
-    - Extract: Name, year, and brief description of awards, competitions, or honors.  
-
-    **📌 Volunteer Experience**  
-    - Extract: Role, organization, start & end dates, and description.  
-
-    **📌 Online Presence**  
-    - Extract: Twitter, GitHub, Stack Overflow, Medium, or relevant profiles.  
-
-    **📌 Hobbies & Interests**  
-    - Extract personal interests (e.g., sports, music, travel, coding hobbies).  
-
-    ### 🔹 **EXPECTED JSON OUTPUT FORMAT**  
-    \`\`\`json
-    {
-      "personalInfo": {
-        "fullName": "",
-        "email": "",
-        "phone": "",
-        "location": "",
-        "linkedin": "",
-        "website": "",
-        "github": "",
-        "portfolio": ""
-      },
-      "professionalSummary": "",
-      "skills": {
-         "technical": [],
-         "soft": [],
-         "languages": []
-      },
-      "tools": [],
-      "experience": [
+// Add this function to handle adding a new experience
+const handleAddExperience = () => {
+  if (!response.experience) {
+    setResponse({
+      ...response,
+      experience: [{
+        title: '',
+        company: '',
+        startDate: '',
+        endDate: '',
+        location: '',
+        responsibilities: ['']
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      experience: [
+        ...response.experience,
         {
-          "title": "",
-          "company": "",
-          "location": "",
-          "startDate": "",
-          "endDate": "",
-          "responsibilities": []
+          title: '',
+          company: '',
+          startDate: '',
+          endDate: '',
+          location: '',
+          responsibilities: ['']
         }
-      ],
-      "education": [
-        {
-          "degree": "",
-          "institution": "",
-          "location": "",
-          "graduationYear": "",
-          "relevantCourses": []
-        }
-      ],
-      "certifications": [
-        {
-          "name": "",
-          "issuer": "",
-          "year": ""
-        }
-      ],
-      "publications": [
-        {
-          "title": "",
-          "publicationType": "",
-          "year": "",
-          "link": ""
-        }
-      ],
-      "awards": [
-        {
-          "name": "",
-          "year": "",
-          "description": ""
-        }
-      ],
-      "volunteerExperience": [
-        {
-          "role": "",
-          "organization": "",
-          "startDate": "",
-          "endDate": "",
-          "description": ""
-        }
-      ],
-      "projects": [
-        {
-          "title": "",
-          "description": "",
-          "technologiesUsed": [],
-          "github": "",
-          "role": ""
-        }
-      ],
-      "onlinePresence": {
-        "twitter": "",
-        "stackOverflow": "",
-        "medium": ""
-      },
-      "hobbies": []
-    }
-    \`\`\`
-
-    **Return only the structured JSON output.**  
-
-    **CV Text:**  
-    ${cvText}
-  `;
+      ]
+    });
+  }
 };
 
-  const handleFileUpload = async (files: File[]) => {
-    const file = files[0];
-    if (!file) return;
+// Add this function to handle adding a new education entry
+const handleAddEducation = () => {
+  if (!response.education) {
+    setResponse({
+      ...response,
+      education: [{
+        degree: '',
+        institution: '',
+        location: '',
+        graduationYear: '',
+        relevantCourses: ['']
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      education: [
+        ...response.education,
+        {
+          degree: '',
+          institution: '',
+          location: '',
+          graduationYear: '',
+          relevantCourses: ['']
+        }
+      ]
+    });
+  }
+};
 
-    setIsLoading(true);
-    setError(null);
+// Add this function to handle adding a new certification
+const handleAddCertification = () => {
+  if (!response.certifications) {
+    setResponse({
+      ...response,
+      certifications: [{
+        name: '',
+        issuer: '',
+        year: ''
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      certifications: [
+        ...response.certifications,
+        {
+          name: '',
+          issuer: '',
+          year: ''
+        }
+      ]
+    });
+  }
+};
 
-    try {
-      const text = await pdfToText(file);
-      setExtractedText(text);
-      setUserData(generateStructuredPrompt(text));
-      console.log("Extracted Text:", text);
-    } catch (error) {
-      setError(error.message);
-      console.error("PDF Processing Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+// Add this function to handle adding a new project
+const handleAddProject = () => {
+  if (!response.projects) {
+    setResponse({
+      ...response,
+      projects: [{
+        title: '',
+        description: '',
+        technologiesUsed: [''],
+        github: '',
+        role: ''
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      projects: [
+        ...response.projects,
+        {
+          title: '',
+          description: '',
+          technologiesUsed: [''],
+          github: '',
+          role: ''
+        }
+      ]
+    });
+  }
+};
 
-  return (
-    <div>
-      <div className="w-full mx-auto border border-dashed bg-white dark:bg-black border-neutral-200 rounded-lg">
-        <FileUpload onChange={handleFileUpload} />
+// Add this function to handle adding a new publication
+const handleAddPublication = () => {
+  if (!response.publications) {
+    setResponse({
+      ...response,
+      publications: [{
+        title: '',
+        publicationType: '',
+        year: '',
+        link: ''
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      publications: [
+        ...response.publications,
+        {
+          title: '',
+          publicationType: '',
+          year: '',
+          link: ''
+        }
+      ]
+    });
+  }
+};
+
+// Add this function to handle adding a new award
+const handleAddAward = () => {
+  if (!response.awards) {
+    setResponse({
+      ...response,
+      awards: [{
+        name: '',
+        year: '',
+        description: ''
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      awards: [
+        ...response.awards,
+        {
+          name: '',
+          year: '',
+          description: ''
+        }
+      ]
+    });
+  }
+};
+
+// Add this function to handle adding a new volunteer experience
+const handleAddVolunteerExperience = () => {
+  if (!response.volunteerExperience) {
+    setResponse({
+      ...response,
+      volunteerExperience: [{
+        role: '',
+        organization: '',
+        startDate: '',
+        endDate: '',
+        description: ''
+      }]
+    });
+  } else {
+    setResponse({
+      ...response,
+      volunteerExperience: [
+        ...response.volunteerExperience,
+        {
+          role: '',
+          organization: '',
+          startDate: '',
+          endDate: '',
+          description: ''
+        }
+      ]
+    });
+  }
+};
+
+// Add this function to handle removing an item from any array
+const handleRemoveItem = (section, index) => {
+  if (response[section] && response[section].length > 0) {
+    const updatedItems = [...response[section]];
+    updatedItems.splice(index, 1);
+    setResponse({
+      ...response,
+      [section]: updatedItems
+    });
+  }
+};
+
+// Function to initialize skills if they're empty
+const initializeEmptyFields = () => {
+  // Make sure personal info exists
+  if (!response.personalInfo) {
+    setResponse({
+      ...response,
+      personalInfo: {
+        fullName: '',
+        email: '',
+        phone: '',
+        location: '',
+        linkedin: '',
+        website: '',
+        github: '',
+        portfolio: ''
+      }
+    });
+  }
+
+  // Make sure skills exist
+  if (!response.skills) {
+    setResponse({
+      ...response,
+      skills: {
+        technical: [],
+        soft: [],
+        languages: []
+      }
+    });
+  }
+
+  // Make sure experience array exists
+  if (!response.experience || !Array.isArray(response.experience)) {
+    setResponse({
+      ...response,
+      experience: []
+    });
+  }
+
+  // Make sure education array exists
+  if (!response.education || !Array.isArray(response.education)) {
+    setResponse({
+      ...response,
+      education: []
+    });
+  }
+
+  // Make sure online presence exists
+  if (!response.onlinePresence) {
+    setResponse({
+      ...response,
+      onlinePresence: {
+        twitter: '',
+        stackOverflow: '',
+        medium: ''
+      }
+    });
+  }
+};
+
+// Call this function when response changes to ensure fields are initialized
+useEffect(() => {
+  if (response) {
+    initializeEmptyFields();
+  }
+}, []);
+
+// Add this to the Experience section JSX
+{activeSection === 'experience' && (
+  <div className="space-y-6">
+    {(!response.experience || response.experience.length === 0) ? (
+      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
+        <p className="text-gray-500 text-sm mb-4">
+          No professional experience added yet
+        </p>
+        <button 
+          onClick={handleAddExperience} 
+          type="button"
+          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add Experience
+        </button>
       </div>
+    ) : (
+      <>
+        {response.experience.map((exp, index) => (
+          <Card key={index}>
+            <CardHeader className="relative">
+              <CardTitle className="text-lg">Experience {index + 1}</CardTitle>
+              <button
+                onClick={() => handleRemoveItem('experience', index)}
+                type="button"
+                className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+                title="Remove experience"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Job Title</label>
+                  <Input
+                    value={exp.title || ''}
+                    onChange={(e) => {
+                      const updatedExperience = [...response.experience];
+                      updatedExperience[index].title = e.target.value;
+                      setResponse({ ...response, experience: updatedExperience });
+                    }}
+                    placeholder="e.g. Frontend Developer"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Company</label>
+                  <Input
+                    value={exp.company || ''}
+                    onChange={(e) => {
+                      const updatedExperience = [...response.experience];
+                      updatedExperience[index].company = e.target.value;
+                      setResponse({ ...response, experience: updatedExperience });
+                    }}
+                    placeholder="e.g. Google Inc."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Start Date</label>
+                  <Input
+                    value={exp.startDate || ''}
+                    onChange={(e) => {
+                      const updatedExperience = [...response.experience];
+                      updatedExperience[index].startDate = e.target.value;
+                      setResponse({ ...response, experience: updatedExperience });
+                    }}
+                    placeholder="e.g. Jan 2020"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">End Date</label>
+                  <Input
+                    value={exp.endDate || ''}
+                    onChange={(e) => {
+                      const updatedExperience = [...response.experience];
+                      updatedExperience[index].endDate = e.target.value;
+                      setResponse({ ...response, experience: updatedExperience });
+                    }}
+                    placeholder="e.g. Present or Mar 2023"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Location</label>
+                  <Input
+                    value={exp.location || ''}
+                    onChange={(e) => {
+                      const updatedExperience = [...response.experience];
+                      updatedExperience[index].location = e.target.value;
+                      setResponse({ ...response, experience: updatedExperience });
+                    }}
+                    placeholder="e.g. New York, NY or Remote"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-medium">Responsibilities</label>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const updatedExperience = [...response.experience];
+                        if (!updatedExperience[index].responsibilities) {
+                          updatedExperience[index].responsibilities = [''];
+                        } else {
+                          updatedExperience[index].responsibilities = [...updatedExperience[index].responsibilities, ''];
+                        }
+                        setResponse({ ...response, experience: updatedExperience });
+                      }}
+                      className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add responsibility
+                    </button>
+                  </div>
+                  {exp.responsibilities && exp.responsibilities.map((responsibility, respIndex) => (
+                    <div key={respIndex} className="flex items-center gap-2">
+                      <Input
+                        value={responsibility || ''}
+                        onChange={(e) => {
+                          const updatedExperience = [...response.experience];
+                          updatedExperience[index].responsibilities[respIndex] = e.target.value;
+                          setResponse({ ...response, experience: updatedExperience });
+                        }}
+                        placeholder={`e.g. Developed a responsive website that increased mobile traffic by 40%`}
+                        className="flex-1"
+                      />
+                      {exp.responsibilities.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedExperience = [...response.experience];
+                            updatedExperience[index].responsibilities.splice(respIndex, 1);
+                            setResponse({ ...response, experience: updatedExperience });
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        <div className="flex justify-center mt-4">
+          <button 
+            onClick={handleAddExperience} 
+            type="button"
+            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Another Experience
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+)}
 
-      {isLoading && <p>Loading...</p>}
-    </div>
-  );
-}
+// Add this to the Education section JSX
+{activeSection === 'education' && (
+  <div className="space-y-6">
+    {(!response.education || response.education.length === 0) ? (
+      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
+        <p className="text-gray-500 text-sm mb-4">
+          No education entries added yet
+        </p>
+        <button 
+          onClick={handleAddEducation} 
+          type="button"
+          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add Education
+        </button>
+      </div>
+    ) : (
+      <>
+        {response.education.map((edu, index) => (
+          <Card key={index}>
+            <CardHeader className="relative">
+              <CardTitle className="text-lg">Education {index + 1}</CardTitle>
+              <button
+                onClick={() => handleRemoveItem('education', index)}
+                type="button"
+                className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+                title="Remove education"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Rest of the education fields remain the same but with better placeholders */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Degree</label>
+                  <Input
+                    value={edu.degree || ''}
+                    onChange={(e) => {
+                      const updatedEducation = [...response.education];
+                      updatedEducation[index].degree = e.target.value;
+                      setResponse({ ...response, education: updatedEducation });
+                    }}
+                    placeholder="e.g. Bachelor of Science in Computer Science"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Institution</label>
+                  <Input
+                    value={edu.institution || ''}
+                    onChange={(e) => {
+                      const updatedEducation = [...response.education];
+                      updatedEducation[index].institution = e.target.value;
+                      setResponse({ ...response, education: updatedEducation });
+                    }}
+                    placeholder="e.g. Stanford University"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Location</label>
+                  <Input
+                    value={edu.location || ''}
+                    onChange={(e) => {
+                      const updatedEducation = [...response.education];
+                      updatedEducation[index].location = e.target.value;
+                      setResponse({ ...response, education: updatedEducation });
+                    }}
+                    placeholder="e.g. Stanford, CA"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Graduation Year</label>
+                  <Input
+                    value={edu.graduationYear || ''}
+                    onChange={(e) => {
+                      const updatedEducation = [...response.education];
+                      updatedEducation[index].graduationYear = e.target.value;
+                      setResponse({ ...response, education: updatedEducation });
+                    }}
+                    placeholder="e.g. 2022"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-medium">Relevant Courses</label>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const updatedEducation = [...response.education];
+                        if (!updatedEducation[index].relevantCourses) {
+                          updatedEducation[index].relevantCourses = [''];
+                        } else {
+                          updatedEducation[index].relevantCourses = [...updatedEducation[index].relevantCourses, ''];
+                        }
+                        setResponse({ ...response, education: updatedEducation });
+                      }}
+                      className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add course
+                    </button>
+                  </div>
+                  {edu.relevantCourses && edu.relevantCourses.map((course, courseIndex) => (
+                    <div key={courseIndex} className="flex items-center gap-2">
+                      <Input
+                        value={course || ''}
+                        onChange={(e) => {
+                          const updatedEducation = [...response.education];
+                          updatedEducation[index].relevantCourses[courseIndex] = e.target.value;
+                          setResponse({ ...response, education: updatedEducation });
+                        }}
+                        placeholder={`e.g. Advanced Programming Concepts`}
+                        className="flex-1"
+                      />
+                      {edu.relevantCourses.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedEducation = [...response.education];
+                            updatedEducation[index].relevantCourses.splice(courseIndex, 1);
+                            setResponse({ ...response, education: updatedEducation });
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        <div className="flex justify-center mt-4">
+          <button 
+            onClick={handleAddEducation} 
+            type="button"
+            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Another Education
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+)}
 
-export default ReadTXT;
+// Add similar "Add" functionality for other sections like projects, certifications, etc.
+// Here's an example for the Skills section
+{activeSection === 'skills' && (
+  <div className="space-y-4">
+    {!response.skills && (
+      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
+        <p className="text-gray-500 text-sm mb-4">
+          No skills added yet
+        </p>
+        <button 
+          onClick={() => setResponse({...response, skills: {technical: [], soft: [], languages: []}})}
+          type="button"
+          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Initialize Skills
+        </button>
+      </div>
+    ) : (
+      <>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Technical Skills</label>
+          <Textarea
+            value={response.skills.technical ? response.skills.technical.join(', ') : ''}
+            onChange={(e) =>
+              setResponse({
+                ...response,
+                skills: { ...response.skills, technical: e.target.value.split(', ').filter(skill => skill.trim()) },
+              })
+            }
+            placeholder="e.g. React, JavaScript, Node.js, CSS, HTML5, MongoDB"
+          />
+          <p className="text-xs text-gray-500">Separate skills with commas</p>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Soft Skills</label>
+          <Textarea
+            value={response.skills.soft ? response.skills.soft.join(', ') : ''}
+            onChange={(e) =>
+              setResponse({
+                ...response,
+                skills: { ...response.skills, soft: e.target.value.split(', ').filter(skill => skill.trim()) },
+              })
+            }
+            placeholder="e.g. Team Leadership, Communication, Problem Solving, Time Management"
+          />
+          <p className="text-xs text-gray-500">Separate skills with commas</p>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Languages</label>
+          <Textarea
+            value={response.skills.languages ? response.skills.languages.join(', ') : ''}
+            onChange={(e) =>
+              setResponse({
+                ...response,
+                skills: { ...response.skills, languages: e.target.value.split(', ').filter(lang => lang.trim()) },
+              })
+            }
+            placeholder="e.g. English (Native), Spanish (Fluent), French (Intermediate)"
+          />
+          <p className="text-xs text-gray-500">Separate languages with commas</p>
+        </div>
+      </>
+    )}
+  </div>
+)}
+
+// Update the projects section with "Add Project" button
+{activeSection === 'projects' && (
+  <div className="space-y-6">
+    {(!response.projects || response.projects.length === 0) ? (
+      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
+        <p className="text-gray-500 text-sm mb-4">
+          No projects added yet
+        </p>
+        <button 
+          onClick={handleAddProject} 
+          type="button"
+          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add Project
+        </button>
+      </div>
+    ) : (
+      <>
+        {response.projects.map((project, index) => (
+          <Card key={index}>
+            <CardHeader className="relative">
+              <CardTitle className="text-lg">Project {index + 1}</CardTitle>
+              <button
+                onClick={() => handleRemoveItem('projects', index)}
+                type="button"
+                className="absolute right-4 top-4 text-red-500 hover:text-red-700"
+                title="Remove project"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Title</label>
+                  <Input
+                    value={project.title || ''}
+                    onChange={(e) => {
+                      const updatedProjects = [...response.projects];
+                      updatedProjects[index].title = e.target.value;
+                      setResponse({ ...response, projects: updatedProjects });
+                    }}
+                    placeholder="e.g. E-commerce Platform"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Role</label>
+                  <Input
+                    value={project.role || ''}
+                    onChange={(e) => {
+                      const updatedProjects = [...response.projects];
+                      updatedProjects[index].role = e.target.value;
+                      setResponse({ ...response, projects: updatedProjects });
+                    }}
+                    placeholder="e.g. Lead Developer"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea
+                    value={project.description || ''}
+                    onChange={(e) => {
+                      const updatedProjects = [...response.projects];
+                      updatedProjects[index].description = e.target.value;
+                      setResponse({ ...response, projects: updatedProjects });
+                    }}
+                    placeholder="e.g. Created a full-stack e-commerce platform with user authentication, product listings, and payment processing"
+                    rows={3}
+                  />
+                </div>

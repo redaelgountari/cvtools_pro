@@ -10,7 +10,6 @@ import React, { useContext, useState, useEffect } from 'react'
 import { useToast } from "@/hooks/use-toast"
 import { ReadContext } from './ReadContext'
 import axios from 'axios'
-
 // Settings schema type definition
 type ResumeSettings = {
   showLineLimit: boolean;
@@ -52,6 +51,8 @@ export default function Settings() {
     });
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
+    const {userinfos} = useContext(ReadContext);
+    
     console.log("AnlysedCV :",AnlysedCV)
 
     // Initialize with context settings if they exist
@@ -67,6 +68,7 @@ export default function Settings() {
         [key]: value
       }));
     };
+
 
     const changeLanguage = async () => {
         if (!AnlysedCV) return;
@@ -154,6 +156,7 @@ export default function Settings() {
                   <CardDescription>
                       Customize how your resume is generated
                   </CardDescription>
+                 
               </CardHeader>
               <CardContent>
                   <div className="space-y-6">

@@ -102,4 +102,3 @@ export interface Resume {
   onlinePresence: OnlinePresence;
   hobbies: string[];
 }
-

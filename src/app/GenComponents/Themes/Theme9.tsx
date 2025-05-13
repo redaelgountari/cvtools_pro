@@ -212,7 +212,7 @@ const BulletPoint = ({ text }: { text: string }) => (
   <Text style={styles.bulletPoint}><Text style={styles.bulletIcon}>•</Text> {text}</Text>
 );
 
-export default function CanadianStyleResume({ userdata, userImage }: { userdata: Resume; userImage: any }) {
+export default function Theme9({ userdata, userImage }: { userdata: Resume; userImage: any }) {
   // Format date range for cleaner display
   const formatDateRange = (startDate: string, endDate: string) => {
     const start = filterNA(startDate);

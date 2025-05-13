@@ -15,11 +15,13 @@ import {getFromStorage, saveToStorage} from "../../Cookiesmv"
 import AnalyseResults from './AnalyseResults';
 import { Resume } from '../types/resume';
 
+
 export default function Analyse(){
   const [response, setResponse] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { userData } = useContext(ReadContext);
+  const { userinfos } = useContext(ReadContext);
   const { setAnlysedCV } = useContext(ReadContext);
   const [activeSection, setActiveSection] = useState('personal');
   const [jobMatchingPrompt, setJobMatchingPrompt] = useState<string>('');
@@ -86,8 +88,9 @@ export default function Analyse(){
   7. Compensation range (if available)
   8. Growth potential
   9. Application link (if available)
+  10.return skills not skill 
   
-  Focus on opportunities that offer career progression and utilize the candidate's full skill set. Prioritize roles that match at least 70% of the technical skills and experience level.`;
+  Focus on opportunities that offer career progression and utilize the candidate's full skills set. Prioritize roles that match at least 70% of the technical skills and experience level.`;
   };
 
 const fetchAnalysis = async () => {
@@ -97,7 +100,7 @@ const fetchAnalysis = async () => {
 
   try {
    
-    const { data } = await axios.post("/api/gemini", { userData: userData.text });
+    const { data } = await axios.post("/api/gemini", { userData: userData.text});
     const cleanedData = data.text.replace(/```json|```/g, '').trim();
     const parsedData = JSON.parse(cleanedData);
 
@@ -153,6 +156,4 @@ const fetchAnalysis = async () => {
       <AnalyseResults/>
     </div>
   )
-
-  
   }

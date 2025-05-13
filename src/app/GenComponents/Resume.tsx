@@ -50,6 +50,10 @@ import Theme5 from './Themes/Theme5';
 import Theme6 from './Themes/Theme6';
 import Theme7 from './Themes/Theme7';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Theme8 from './Themes/Theme8';
+import Theme9 from './Themes/Theme9';
+import Theme10 from './Themes/Theme10';
+import Theme11 from './Themes/Theme11';
 
 export default function Resume() {
     // Types
@@ -333,6 +337,10 @@ export default function Resume() {
             case 'theme5': return <Theme5 {...themeProps} />;
             case 'theme6': return <Theme6 {...themeProps} />;
             case 'theme7': return <Theme7 {...themeProps} />;
+            case 'theme8': return <Theme8 {...themeProps} />;
+            case 'theme9': return <Theme9 {...themeProps} />;
+            case 'theme10': return <Theme10 {...themeProps} />;
+            case 'theme11': return <Theme11 {...themeProps} />;
             default: return <Theme2 {...themeProps} />;
         }
     };
@@ -494,6 +502,10 @@ export default function Resume() {
                                                         { id: 'theme5', name: 'Minimal' },
                                                         { id: 'theme6', name: 'New' },
                                                         { id: 'theme7', name: 'New' },
+                                                        { id: 'theme8', name: 'New' },
+                                                        { id: 'theme9', name: 'New' },
+                                                        { id: 'theme10', name: 'New' },
+                                                        { id: 'theme11', name: 'New' },
                                                     ].map((theme, index) => (
                                                         <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                                                             <div className="p-1">
