@@ -25,6 +25,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { signOut } from "next-auth/react"
 
 // This is sample data.
 const data = {
@@ -73,6 +74,10 @@ const data = {
           title: "Settings",
           url: "/Settings",
         },
+        // {
+        //   title: "logout",
+        //   url: signOut(),
+        // },
       ],
     },
     // {

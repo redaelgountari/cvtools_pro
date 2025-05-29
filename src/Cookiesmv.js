@@ -69,14 +69,34 @@ export function saveImageToStorage(key, imageFiles, expiryDays = 7) {
       });
     };
 
+    // Helper function to generate unique filename with timestamp
+    const generateUniqueFilename = (originalName) => {
+      const timestamp = new Date().getTime();
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const extension = originalName.includes('.') ? originalName.split('.').pop() : 'jpg';
+      const baseName = originalName.includes('.') ? originalName.split('.').slice(0, -1).join('.') : originalName;
+      return `${baseName}_${timestamp}_${randomSuffix}.${extension}`;
+    };
+
     // If imageFiles is an array of file paths from the server
     if (typeof imageFiles[0] === 'string') {
       // Fetch and convert server images to base64
-      const fetchImagePromises = imageFiles.map(async (imagePath) => {
+      const fetchImagePromises = imageFiles.map(async (imagePath, index) => {
         try {
           const response = await fetch(`http://localhost:8000/extract-images/${imagePath}`);
           const blob = await response.blob();
-          return await convertToBase64(blob);
+          const base64Data = await convertToBase64(blob);
+          
+          // Generate unique filename for this image
+          const originalName = imagePath.split('/').pop() || `image_${index}`;
+          const uniqueName = generateUniqueFilename(originalName);
+          
+          return {
+            name: uniqueName,
+            data: base64Data,
+            originalName: imagePath,
+            addedAt: new Date().toISOString()
+          };
         } catch (error) {
           console.error('Error fetching image:', error);
           return null;
@@ -88,11 +108,12 @@ export function saveImageToStorage(key, imageFiles, expiryDays = 7) {
           // Filter out any null results
           const validBase64Images = base64Results.filter(img => img !== null);
           
-          // Create storage item with base64 images
+          // Create storage item with base64 images and metadata
           const storageItem = {
             data: validBase64Images,
             timestamp: new Date().getTime(),
-            expiry: expiryDays ? new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000) : null
+            expiry: expiryDays ? new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000) : null,
+            totalImages: validBase64Images.length
           };
 
           // Store in localStorage
@@ -105,13 +126,30 @@ export function saveImageToStorage(key, imageFiles, expiryDays = 7) {
     // If imageFiles is already a File object or Blob
     else {
       const convertFilesToBase64 = async () => {
-        const base64Promises = imageFiles.map(convertToBase64);
+        const base64Promises = imageFiles.map(async (file, index) => {
+          const base64Data = await convertToBase64(file);
+          
+          // Generate unique filename for this file
+          const originalName = file.name || `image_${index}`;
+          const uniqueName = generateUniqueFilename(originalName);
+          
+          return {
+            name: uniqueName,
+            data: base64Data,
+            originalName: originalName,
+            addedAt: new Date().toISOString(),
+            size: file.size,
+            type: file.type
+          };
+        });
+        
         const base64Results = await Promise.all(base64Promises);
 
         const storageItem = {
           data: base64Results,
           timestamp: new Date().getTime(),
-          expiry: expiryDays ? new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000) : null
+          expiry: expiryDays ? new Date().getTime() + (expiryDays * 24 * 60 * 60 * 1000) : null,
+          totalImages: base64Results.length
         };
 
         localStorage.setItem(key, JSON.stringify(storageItem));

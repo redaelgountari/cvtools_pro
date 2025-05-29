@@ -228,7 +228,7 @@ function ReadTXT() {
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
+      {/* <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="w-6 h-6" />
           Upload Resume
@@ -236,12 +236,12 @@ function ReadTXT() {
         <CardDescription>
           Upload a PDF to extract text and images
         </CardDescription>
-      </CardHeader>
+      </CardHeader> */}
       <CardContent>
-        <div className="w-full border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6">
+        <div className="w-full border-gray-300 dark:border-gray-700 rounded-lg p-6">
           <FileUpload onChange={handleFileUpload} />
         </div>
-
+        
         {isLoading && (
           <div className="flex items-center justify-center mt-4">
             <Loader2 className="mr-2 h-6 w-6 animate-spin" />

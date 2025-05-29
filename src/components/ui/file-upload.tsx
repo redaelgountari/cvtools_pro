@@ -56,7 +56,7 @@ export const FileUpload = ({
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        className="p-2 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
       >
         <input
           ref={fileInputRef}
@@ -66,9 +66,9 @@ export const FileUpload = ({
           className="hidden"
           accept=".pdf"
         />
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
+        {/* <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
-        </div>
+        </div> */}
         <div className="flex flex-col items-center justify-center">
           <p className="relative z-20 font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base">
             Upload file
@@ -76,7 +76,7 @@ export const FileUpload = ({
           <p className="relative z-20 font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
             Drag or drop your files here or click to upload
           </p>
-          <div className="relative w-full mt-10 max-w-xl mx-auto">
+          <div className="relative mt-10 mx-auto w-full max-w-[250px] sm:max-w-full overflow-hidden">
             {files.length > 0 &&
               files.map((file, idx) => (
                 <motion.div
@@ -168,11 +168,3 @@ export const FileUpload = ({
     </div>
   );
 };
-
-export function GridPattern() {
-
-  return (
-   
-    <div></div>
-  );
-}

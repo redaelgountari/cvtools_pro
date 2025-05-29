@@ -1,758 +1,394 @@
-// Modified components focusing on user experience and adding empty fields functionality
+"use client"
 
-// Add this function to handle adding a new experience
-const handleAddExperience = () => {
-  if (!response.experience) {
-    setResponse({
-      ...response,
-      experience: [{
-        title: '',
-        company: '',
-        startDate: '',
-        endDate: '',
-        location: '',
-        responsibilities: ['']
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      experience: [
-        ...response.experience,
-        {
-          title: '',
-          company: '',
-          startDate: '',
-          endDate: '',
-          location: '',
-          responsibilities: ['']
-        }
-      ]
-    });
-  }
-};
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import React, { useContext, useEffect, useState } from 'react';
+import { ReadContext } from './ReadContext';
+import { getFromStorage, saveToStorage } from '@/Cookiesmv';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
-// Add this function to handle adding a new education entry
-const handleAddEducation = () => {
-  if (!response.education) {
-    setResponse({
-      ...response,
-      education: [{
-        degree: '',
-        institution: '',
-        location: '',
-        graduationYear: '',
-        relevantCourses: ['']
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      education: [
-        ...response.education,
-        {
-          degree: '',
-          institution: '',
-          location: '',
-          graduationYear: '',
-          relevantCourses: ['']
-        }
-      ]
-    });
-  }
-};
+// Define Zod schemas for each section of the resume
+const personalInfoSchema = z.object({
+  fullName: z.string().min(2, { message: "Name is required and must be at least 2 characters" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  linkedin: z.string().url({ message: "Invalid LinkedIn URL" }).optional().or(z.literal('')),
+  website: z.string().url({ message: "Invalid website URL" }).optional().or(z.literal('')),
+  github: z.string().url({ message: "Invalid GitHub URL" }).optional().or(z.literal('')),
+  portfolio: z.string().url({ message: "Invalid portfolio URL" }).optional().or(z.literal('')),
+});
 
-// Add this function to handle adding a new certification
-const handleAddCertification = () => {
-  if (!response.certifications) {
-    setResponse({
-      ...response,
-      certifications: [{
-        name: '',
-        issuer: '',
-        year: ''
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      certifications: [
-        ...response.certifications,
-        {
-          name: '',
-          issuer: '',
-          year: ''
-        }
-      ]
-    });
-  }
-};
+const skillsSchema = z.object({
+  technical: z.array(z.string()).optional(),
+  soft: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional(),
+});
 
-// Add this function to handle adding a new project
-const handleAddProject = () => {
-  if (!response.projects) {
-    setResponse({
-      ...response,
-      projects: [{
-        title: '',
-        description: '',
-        technologiesUsed: [''],
-        github: '',
-        role: ''
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      projects: [
-        ...response.projects,
-        {
-          title: '',
-          description: '',
-          technologiesUsed: [''],
-          github: '',
-          role: ''
-        }
-      ]
-    });
-  }
-};
+const experienceItemSchema = z.object({
+  title: z.string().min(1, { message: "Job title is required" }),
+  company: z.string().min(1, { message: "Company name is required" }),
+  startDate: z.string().min(1, { message: "Start date is required" }),
+  endDate: z.string().optional(),
+  location: z.string().optional(),
+  responsibilities: z.array(z.string()).optional(),
+});
 
-// Add this function to handle adding a new publication
-const handleAddPublication = () => {
-  if (!response.publications) {
-    setResponse({
-      ...response,
-      publications: [{
-        title: '',
-        publicationType: '',
-        year: '',
-        link: ''
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      publications: [
-        ...response.publications,
-        {
-          title: '',
-          publicationType: '',
-          year: '',
-          link: ''
-        }
-      ]
-    });
-  }
-};
+const educationItemSchema = z.object({
+  degree: z.string().min(1, { message: "Degree is required" }),
+  institution: z.string().min(1, { message: "Institution is required" }),
+  location: z.string().optional(),
+  graduationYear: z.string().optional(),
+  relevantCourses: z.array(z.string()).optional(),
+});
 
-// Add this function to handle adding a new award
-const handleAddAward = () => {
-  if (!response.awards) {
-    setResponse({
-      ...response,
-      awards: [{
-        name: '',
-        year: '',
-        description: ''
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      awards: [
-        ...response.awards,
-        {
-          name: '',
-          year: '',
-          description: ''
-        }
-      ]
-    });
-  }
-};
+const certificationItemSchema = z.object({
+  name: z.string().min(1, { message: "Certification name is required" }),
+  issuer: z.string().min(1, { message: "Issuer is required" }),
+  year: z.string().optional(),
+});
 
-// Add this function to handle adding a new volunteer experience
-const handleAddVolunteerExperience = () => {
-  if (!response.volunteerExperience) {
-    setResponse({
-      ...response,
-      volunteerExperience: [{
-        role: '',
-        organization: '',
-        startDate: '',
-        endDate: '',
-        description: ''
-      }]
-    });
-  } else {
-    setResponse({
-      ...response,
-      volunteerExperience: [
-        ...response.volunteerExperience,
-        {
-          role: '',
-          organization: '',
-          startDate: '',
-          endDate: '',
-          description: ''
-        }
-      ]
-    });
-  }
-};
+const publicationItemSchema = z.object({
+  title: z.string().min(1, { message: "Publication title is required" }),
+  publicationType: z.string().optional(),
+  year: z.string().optional(),
+  link: z.string().url({ message: "Invalid publication link" }).optional().or(z.literal('')),
+});
 
-// Add this function to handle removing an item from any array
-const handleRemoveItem = (section, index) => {
-  if (response[section] && response[section].length > 0) {
-    const updatedItems = [...response[section]];
-    updatedItems.splice(index, 1);
-    setResponse({
-      ...response,
-      [section]: updatedItems
-    });
-  }
-};
+const awardItemSchema = z.object({
+  name: z.string().min(1, { message: "Award name is required" }),
+  year: z.string().optional(),
+  description: z.string().optional(),
+});
 
-// Function to initialize skills if they're empty
-const initializeEmptyFields = () => {
-  // Make sure personal info exists
-  if (!response.personalInfo) {
-    setResponse({
-      ...response,
-      personalInfo: {
-        fullName: '',
-        email: '',
-        phone: '',
-        location: '',
-        linkedin: '',
-        website: '',
-        github: '',
-        portfolio: ''
+const volunteerItemSchema = z.object({
+  role: z.string().min(1, { message: "Role is required" }),
+  organization: z.string().min(1, { message: "Organization is required" }),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  description: z.string().optional(),
+});
+
+const projectItemSchema = z.object({
+  title: z.string().min(1, { message: "Project title is required" }),
+  description: z.string().optional(),
+  technologiesUsed: z.array(z.string()).optional(),
+  github: z.string().url({ message: "Invalid GitHub URL" }).optional().or(z.literal('')),
+  role: z.string().optional(),
+});
+
+const onlinePresenceSchema = z.object({
+  twitter: z.string().url({ message: "Invalid Twitter URL" }).optional().or(z.literal('')),
+  stackOverflow: z.string().url({ message: "Invalid Stack Overflow URL" }).optional().or(z.literal('')),
+  medium: z.string().url({ message: "Invalid Medium URL" }).optional().or(z.literal('')),
+});
+
+// The main resume schema
+const resumeSchema = z.object({
+  personalInfo: personalInfoSchema.optional(),
+  professionalSummary: z.string().optional(),
+  skills: skillsSchema.optional(),
+  tools: z.array(z.string()).optional(),
+  experience: z.array(experienceItemSchema).optional(),
+  education: z.array(educationItemSchema).optional(),
+  certifications: z.array(certificationItemSchema).optional(),
+  publications: z.array(publicationItemSchema).optional(),
+  awards: z.array(awardItemSchema).optional(),
+  volunteerExperience: z.array(volunteerItemSchema).optional(),
+  projects: z.array(projectItemSchema).optional(),
+  onlinePresence: onlinePresenceSchema.optional(),
+  hobbies: z.array(z.string()).optional(),
+});
+
+// Define the Resume type based on the Zod schema
+export type Resume = z.infer<typeof resumeSchema>;
+
+export default function AnalyseResults() {
+  const [response, setResponse] = useState<Resume | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [activeSection, setActiveSection] = useState('personal');
+  const { AnlysedCV, setAnlysedCV, setUserData } = useContext(ReadContext);
+  const storedImages = getFromStorage('userImage');
+  const [userImages, setUserImages] = useState<string[]>(storedImages || []);
+
+  // Initialize useForm with Zod validation
+  const form = useForm<Resume>({
+    resolver: zodResolver(resumeSchema),
+    defaultValues: response || {},
+  });
+
+  useEffect(() => {
+    if (!AnlysedCV) {
+      const storedData = getFromStorage('userData');
+      if (storedData) {
+        console.log("storedData :", storedData);
+        setResponse(storedData);
+        form.reset(storedData);
+        setUserImages(getFromStorage('userImage') || []);
       }
+    } else {
+      setResponse(AnlysedCV);
+      form.reset(AnlysedCV);
+    }
+  }, [AnlysedCV, form]);
+
+  const onSubmit = (data: Resume) => {
+    setLoading(true);
+    
+    try {
+      setAnlysedCV(data);
+      
+      saveToStorage('userData', data);
+      saveToStorage('userImage', userImages);
+      
+      setError('');
+    } catch (err) {
+      console.error("Error updating resume data:", err);
+      setError('Failed to update resume data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeImage = (index: number) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    try {
+      const newImages = [...userImages];
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = () => {
+        if (reader.result) {
+          newImages[index] = reader.result as string;
+          
+          setUserImages(newImages);
+          setUserData(prev => ({
+            ...prev,
+            image: [file] 
+          }));
+          
+          saveToStorage('userImage', newImages);
+        }
+      };
+  
+      reader.onerror = () => {
+        throw new Error('Failed to read image file');
+      };
+      
+    } catch (error) {
+      console.error('Error updating image:', error);
+      setError('Failed to update image. Please try again.');
+    }
+  };
+
+  const handleAddMoreImages = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    
+    fileInput.addEventListener('change', (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = () => {
+        if (reader.result) {
+          const newImages = [...userImages, reader.result as string];
+          setUserImages(newImages);
+          saveToStorage('userImage', newImages);
+          
+          setUserData(prev => ({
+            ...prev,
+            image: prev?.image ? [...prev?.image, file] : [file]
+          }));
+        }
+      };
     });
-  }
+    
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+  };
 
-  // Make sure skills exist
-  if (!response.skills) {
-    setResponse({
-      ...response,
-      skills: {
-        technical: [],
-        soft: [],
-        languages: []
-      }
+  const handleAddImages = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    
+    fileInput.addEventListener('change', (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = () => {
+        if (reader.result) {
+          const newImages = [reader.result as string];
+          setUserImages(newImages);
+          saveToStorage('userImage', newImages);
+          
+          setUserData(prev => ({
+            ...prev,
+            image: [file]
+          }));
+        }
+      };
     });
-  }
+    
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+  };
 
-  // Make sure experience array exists
-  if (!response.experience || !Array.isArray(response.experience)) {
-    setResponse({
-      ...response,
-      experience: []
+  const handleMakePrimary = (index: number) => {
+    if (index === 0 || userImages.length <= 1) return;
+    
+    const newImages = [...userImages];
+    const selectedImage = newImages.splice(index, 1)[0];
+    newImages.unshift(selectedImage);
+    
+    setUserImages(newImages);
+    saveToStorage('userImage', newImages);
+    
+    setUserData(prev => {
+      if (!Array.isArray(prev?.image) || prev?.image.length <= 1) return prev;
+      
+      const updatedImages = [...prev?.image];
+      const selectedFile = updatedImages.splice(index, 1)[0];
+      updatedImages.unshift(selectedFile);
+      
+      return {
+        ...prev,
+        image: updatedImages
+      };
     });
-  }
-
-  // Make sure education array exists
-  if (!response.education || !Array.isArray(response.education)) {
-    setResponse({
-      ...response,
-      education: []
+  };
+  
+  const handleDeleteImage = (index: number) => {
+    const newImages = [...userImages];
+    newImages.splice(index, 1);
+    setUserImages(newImages);
+    saveToStorage('userImage', newImages);
+    
+    // Update userdata context accordingly
+    setUserData(prev => {
+      const updatedImages = Array.isArray(prev?.image) ? [...prev?.image] : [];
+      updatedImages.splice(index, 1);
+      return {
+        ...prev,
+        image: updatedImages
+      };
     });
+  };
+
+  const sections = [
+    { id: 'image', label: 'Personal image' },
+    { id: 'personal', label: 'Personal Info' },
+    { id: 'summary', label: 'Summary' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'tools', label: 'Tools' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'education', label: 'Education' },
+    { id: 'certifications', label: 'Certifications' },
+    { id: 'publications', label: 'Publications' },
+    { id: 'awards', label: 'Awards' },
+    { id: 'volunteer', label: 'Volunteer Experience' },
+    { id: 'projects', label: 'Projects' },
+    { id: 'online', label: 'Online Presence' },
+    { id: 'hobbies', label: 'Hobbies' }
+  ];
+
+  if (!response) {
+    return (
+        <div className="flex flex-col items-center justify-center h-[200px] border-2 border-dashed rounded-md p-4">
+            <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
+            <p className="text-center text-muted-foreground">
+                No CV data found. Please upload and analyze your CV first.
+            </p>
+        </div>
+    );
   }
 
-  // Make sure online presence exists
-  if (!response.onlinePresence) {
-    setResponse({
-      ...response,
-      onlinePresence: {
-        twitter: '',
-        stackOverflow: '',
-        medium: ''
-      }
-    });
-  }
-};
-
-// Call this function when response changes to ensure fields are initialized
-useEffect(() => {
-  if (response) {
-    initializeEmptyFields();
-  }
-}, []);
-
-// Add this to the Experience section JSX
-{activeSection === 'experience' && (
-  <div className="space-y-6">
-    {(!response.experience || response.experience.length === 0) ? (
-      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
-        <p className="text-gray-500 text-sm mb-4">
-          No professional experience added yet
-        </p>
-        <button 
-          onClick={handleAddExperience} 
-          type="button"
-          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Experience
-        </button>
-      </div>
-    ) : (
-      <>
-        {response.experience.map((exp, index) => (
-          <Card key={index}>
-            <CardHeader className="relative">
-              <CardTitle className="text-lg">Experience {index + 1}</CardTitle>
-              <button
-                onClick={() => handleRemoveItem('experience', index)}
-                type="button"
-                className="absolute right-4 top-4 text-red-500 hover:text-red-700"
-                title="Remove experience"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Job Title</label>
-                  <Input
-                    value={exp.title || ''}
-                    onChange={(e) => {
-                      const updatedExperience = [...response.experience];
-                      updatedExperience[index].title = e.target.value;
-                      setResponse({ ...response, experience: updatedExperience });
-                    }}
-                    placeholder="e.g. Frontend Developer"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Company</label>
-                  <Input
-                    value={exp.company || ''}
-                    onChange={(e) => {
-                      const updatedExperience = [...response.experience];
-                      updatedExperience[index].company = e.target.value;
-                      setResponse({ ...response, experience: updatedExperience });
-                    }}
-                    placeholder="e.g. Google Inc."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Start Date</label>
-                  <Input
-                    value={exp.startDate || ''}
-                    onChange={(e) => {
-                      const updatedExperience = [...response.experience];
-                      updatedExperience[index].startDate = e.target.value;
-                      setResponse({ ...response, experience: updatedExperience });
-                    }}
-                    placeholder="e.g. Jan 2020"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">End Date</label>
-                  <Input
-                    value={exp.endDate || ''}
-                    onChange={(e) => {
-                      const updatedExperience = [...response.experience];
-                      updatedExperience[index].endDate = e.target.value;
-                      setResponse({ ...response, experience: updatedExperience });
-                    }}
-                    placeholder="e.g. Present or Mar 2023"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">Location</label>
-                  <Input
-                    value={exp.location || ''}
-                    onChange={(e) => {
-                      const updatedExperience = [...response.experience];
-                      updatedExperience[index].location = e.target.value;
-                      setResponse({ ...response, experience: updatedExperience });
-                    }}
-                    placeholder="e.g. New York, NY or Remote"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium">Responsibilities</label>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        const updatedExperience = [...response.experience];
-                        if (!updatedExperience[index].responsibilities) {
-                          updatedExperience[index].responsibilities = [''];
-                        } else {
-                          updatedExperience[index].responsibilities = [...updatedExperience[index].responsibilities, ''];
-                        }
-                        setResponse({ ...response, experience: updatedExperience });
-                      }}
-                      className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Add responsibility
-                    </button>
-                  </div>
-                  {exp.responsibilities && exp.responsibilities.map((responsibility, respIndex) => (
-                    <div key={respIndex} className="flex items-center gap-2">
-                      <Input
-                        value={responsibility || ''}
-                        onChange={(e) => {
-                          const updatedExperience = [...response.experience];
-                          updatedExperience[index].responsibilities[respIndex] = e.target.value;
-                          setResponse({ ...response, experience: updatedExperience });
-                        }}
-                        placeholder={`e.g. Developed a responsive website that increased mobile traffic by 40%`}
-                        className="flex-1"
-                      />
-                      {exp.responsibilities.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedExperience = [...response.experience];
-                            updatedExperience[index].responsibilities.splice(respIndex, 1);
-                            setResponse({ ...response, experience: updatedExperience });
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <Card>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardHeader>
+              <CardTitle>Resume Analysis</CardTitle>
+              <div className="flex gap-2 overflow-x-auto py-2">
+                {sections.map((section) => (
+                  <Button
+                    key={section.id}
+                    variant={activeSection === section.id ? "default" : "outline"}
+                    onClick={() => setActiveSection(section.id)}
+                    className="whitespace-nowrap"
+                    type="button"
+                  >
+                    {section.label}
+                  </Button>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        ))}
-        <div className="flex justify-center mt-4">
-          <button 
-            onClick={handleAddExperience} 
-            type="button"
-            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Another Experience
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-)}
-
-// Add this to the Education section JSX
-{activeSection === 'education' && (
-  <div className="space-y-6">
-    {(!response.education || response.education.length === 0) ? (
-      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
-        <p className="text-gray-500 text-sm mb-4">
-          No education entries added yet
-        </p>
-        <button 
-          onClick={handleAddEducation} 
-          type="button"
-          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Education
-        </button>
-      </div>
-    ) : (
-      <>
-        {response.education.map((edu, index) => (
-          <Card key={index}>
-            <CardHeader className="relative">
-              <CardTitle className="text-lg">Education {index + 1}</CardTitle>
-              <button
-                onClick={() => handleRemoveItem('education', index)}
-                type="button"
-                className="absolute right-4 top-4 text-red-500 hover:text-red-700"
-                title="Remove education"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Rest of the education fields remain the same but with better placeholders */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Degree</label>
-                  <Input
-                    value={edu.degree || ''}
-                    onChange={(e) => {
-                      const updatedEducation = [...response.education];
-                      updatedEducation[index].degree = e.target.value;
-                      setResponse({ ...response, education: updatedEducation });
-                    }}
-                    placeholder="e.g. Bachelor of Science in Computer Science"
-                  />
+            <CardContent className="space-y-6">
+              {loading && (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="animate-spin" />
+                  <span>Updating...</span>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Institution</label>
-                  <Input
-                    value={edu.institution || ''}
-                    onChange={(e) => {
-                      const updatedEducation = [...response.education];
-                      updatedEducation[index].institution = e.target.value;
-                      setResponse({ ...response, education: updatedEducation });
-                    }}
-                    placeholder="e.g. Stanford University"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Location</label>
-                  <Input
-                    value={edu.location || ''}
-                    onChange={(e) => {
-                      const updatedEducation = [...response.education];
-                      updatedEducation[index].location = e.target.value;
-                      setResponse({ ...response, education: updatedEducation });
-                    }}
-                    placeholder="e.g. Stanford, CA"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Graduation Year</label>
-                  <Input
-                    value={edu.graduationYear || ''}
-                    onChange={(e) => {
-                      const updatedEducation = [...response.education];
-                      updatedEducation[index].graduationYear = e.target.value;
-                      setResponse({ ...response, education: updatedEducation });
-                    }}
-                    placeholder="e.g. 2022"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium">Relevant Courses</label>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        const updatedEducation = [...response.education];
-                        if (!updatedEducation[index].relevantCourses) {
-                          updatedEducation[index].relevantCourses = [''];
-                        } else {
-                          updatedEducation[index].relevantCourses = [...updatedEducation[index].relevantCourses, ''];
-                        }
-                        setResponse({ ...response, education: updatedEducation });
-                      }}
-                      className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Add course
-                    </button>
-                  </div>
-                  {edu.relevantCourses && edu.relevantCourses.map((course, courseIndex) => (
-                    <div key={courseIndex} className="flex items-center gap-2">
-                      <Input
-                        value={course || ''}
-                        onChange={(e) => {
-                          const updatedEducation = [...response.education];
-                          updatedEducation[index].relevantCourses[courseIndex] = e.target.value;
-                          setResponse({ ...response, education: updatedEducation });
-                        }}
-                        placeholder={`e.g. Advanced Programming Concepts`}
-                        className="flex-1"
-                      />
-                      {edu.relevantCourses.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedEducation = [...response.education];
-                            updatedEducation[index].relevantCourses.splice(courseIndex, 1);
-                            setResponse({ ...response, education: updatedEducation });
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        <div className="flex justify-center mt-4">
-          <button 
-            onClick={handleAddEducation} 
-            type="button"
-            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Another Education
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-)}
+              )}
 
-// Add similar "Add" functionality for other sections like projects, certifications, etc.
-// Here's an example for the Skills section
-{activeSection === 'skills' && (
-  <div className="space-y-4">
-    {!response.skills && (
-      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
-        <p className="text-gray-500 text-sm mb-4">
-          No skills added yet
-        </p>
-        <button 
-          onClick={() => setResponse({...response, skills: {technical: [], soft: [], languages: []}})}
-          type="button"
-          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Initialize Skills
-        </button>
-      </div>
-    ) : (
-      <>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Technical Skills</label>
-          <Textarea
-            value={response.skills.technical ? response.skills.technical.join(', ') : ''}
-            onChange={(e) =>
-              setResponse({
-                ...response,
-                skills: { ...response.skills, technical: e.target.value.split(', ').filter(skill => skill.trim()) },
-              })
-            }
-            placeholder="e.g. React, JavaScript, Node.js, CSS, HTML5, MongoDB"
-          />
-          <p className="text-xs text-gray-500">Separate skills with commas</p>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Soft Skills</label>
-          <Textarea
-            value={response.skills.soft ? response.skills.soft.join(', ') : ''}
-            onChange={(e) =>
-              setResponse({
-                ...response,
-                skills: { ...response.skills, soft: e.target.value.split(', ').filter(skill => skill.trim()) },
-              })
-            }
-            placeholder="e.g. Team Leadership, Communication, Problem Solving, Time Management"
-          />
-          <p className="text-xs text-gray-500">Separate skills with commas</p>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Languages</label>
-          <Textarea
-            value={response.skills.languages ? response.skills.languages.join(', ') : ''}
-            onChange={(e) =>
-              setResponse({
-                ...response,
-                skills: { ...response.skills, languages: e.target.value.split(', ').filter(lang => lang.trim()) },
-              })
-            }
-            placeholder="e.g. English (Native), Spanish (Fluent), French (Intermediate)"
-          />
-          <p className="text-xs text-gray-500">Separate languages with commas</p>
-        </div>
-      </>
-    )}
-  </div>
-)}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-// Update the projects section with "Add Project" button
-{activeSection === 'projects' && (
-  <div className="space-y-6">
-    {(!response.projects || response.projects.length === 0) ? (
-      <div className="text-center py-6 bg-gray-50 rounded-xl border border-gray-200">
-        <p className="text-gray-500 text-sm mb-4">
-          No projects added yet
-        </p>
-        <button 
-          onClick={handleAddProject} 
-          type="button"
-          className="flex items-center mx-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow transition-colors duration-300"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Project
-        </button>
-      </div>
-    ) : (
-      <>
-        {response.projects.map((project, index) => (
-          <Card key={index}>
-            <CardHeader className="relative">
-              <CardTitle className="text-lg">Project {index + 1}</CardTitle>
-              <button
-                onClick={() => handleRemoveItem('projects', index)}
-                type="button"
-                className="absolute right-4 top-4 text-red-500 hover:text-red-700"
-                title="Remove project"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Title</label>
-                  <Input
-                    value={project.title || ''}
-                    onChange={(e) => {
-                      const updatedProjects = [...response.projects];
-                      updatedProjects[index].title = e.target.value;
-                      setResponse({ ...response, projects: updatedProjects });
-                    }}
-                    placeholder="e.g. E-commerce Platform"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Role</label>
-                  <Input
-                    value={project.role || ''}
-                    onChange={(e) => {
-                      const updatedProjects = [...response.projects];
-                      updatedProjects[index].role = e.target.value;
-                      setResponse({ ...response, projects: updatedProjects });
-                    }}
-                    placeholder="e.g. Lead Developer"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea
-                    value={project.description || ''}
-                    onChange={(e) => {
-                      const updatedProjects = [...response.projects];
-                      updatedProjects[index].description = e.target.value;
-                      setResponse({ ...response, projects: updatedProjects });
-                    }}
-                    placeholder="e.g. Created a full-stack e-commerce platform with user authentication, product listings, and payment processing"
-                    rows={3}
-                  />
-                </div>
+              {/* Image Section */}
+              {activeSection === 'image' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Professional Images</h3>
+                  
+                  {userImages && userImages.length > 0 ? (
+                <div>
+                  <div className={`${userImages.length > 1 ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" : "max-w-xs mx-auto"}`}>
+                    {userImages.map((base64Image, index) => (
+                      <div 
+                        key={index} 
+                        className={`relative group overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl ${index === 0 ? "ring-2 ring-blue-500" : ""}`}
+                      >
+                        <div className="aspect-square overflow-hidden">
+                          <img 
+                            src={base64Image} 
+                            alt={`Professional Image ${index + 1}`} 
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                        </div>
+                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-2">
+                          {index !== 0 && userImages.length > 1 && (
+                            <button 
+                              onClick={() => handleMakePrimary(index)}
+                              className="bg-blue-500 text-white p-1 rounded-full shadow hover:bg-blue-600"
+                              type="button"
+                              title="Make primary"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

@@ -25,6 +25,7 @@ export default function Analyse(){
   const { setAnlysedCV } = useContext(ReadContext);
   const [activeSection, setActiveSection] = useState('personal');
   const [jobMatchingPrompt, setJobMatchingPrompt] = useState<string>('');
+  const [uploading , setUploading] = useState<boolean>(false)
 
   const calculateTotalExperience = useMemo(() => {
     return response?.experience.reduce((total, exp) => {
@@ -103,11 +104,11 @@ const fetchAnalysis = async () => {
     const { data } = await axios.post("/api/gemini", { userData: userData.text});
     const cleanedData = data.text.replace(/```json|```/g, '').trim();
     const parsedData = JSON.parse(cleanedData);
-
+    
     if (!parsedData.personalInfo || !parsedData.experience) {
       throw new Error('Invalid resume data format');
     }
-
+    setUploading(true)
     setResponse(parsedData);
     setAnlysedCV(parsedData);
     const prompt = generateJobMatchingPrompt(parsedData);
@@ -123,37 +124,36 @@ const fetchAnalysis = async () => {
   useEffect(() => {
     if (userData) {
       fetchAnalysis();
+      setUploading(false)
       console.log("userData :",userData.text)
     }
-  }, [userData]);
+    else{
+      setUploading(true)
+    }
+  }, [userData?.text]);
 
-  if (!response) {
     return (
-      <Card className="max-w-4xl mx-auto border">
-        <CardHeader>
-          <CardTitle>Resume Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading && (
-            <div >
-              <Loader2 className="animate-spin" />
-              <span>Analyzing your resume...</span>
-              <LoadingState />
-
+     
+     <div className="flex flex-col min-h-screen">
+            <div className="flex-1 ">
+                  <div className="grid grid-cols-1 ">
+                      <CardContent>
+                        {
+                        !uploading ? <LoadingState /> : 
+                        <AnalyseResults />
+                      }
+                      {error && (
+                        <Alert variant="destructive">
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                      )}
+                      </CardContent>
+              </div>
             </div>
-          )}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+      
+            {/* <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" /> */}
+          </div>
+
     );
-  }
-  return(
-    <div>
-      <AnalyseResults/>
-    </div>
-  )
+
   }
