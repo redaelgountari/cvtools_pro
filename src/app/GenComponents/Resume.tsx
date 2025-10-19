@@ -54,6 +54,7 @@ import Theme8 from './Themes/Theme8';
 import Theme9 from './Themes/Theme9';
 import Theme10 from './Themes/Theme10';
 import Theme11 from './Themes/Theme11';
+import AIcvgenerated from './AIcvgenerated';
 
 export default function Resume() {
     // Types
@@ -387,8 +388,8 @@ export default function Resume() {
                             </CardContent>
                         </Card>
                         
-                        {/* Right Column - Job Description */}
-                        <Card className="shadow-md">
+                        <div className=' col-auto'>
+                            <Card className="shadow-md">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <div>
                                     <CardTitle className="text-lg">Target Job Description</CardTitle>
@@ -431,8 +432,14 @@ export default function Resume() {
                                         </Button>
                                     </div>
                                 )}
+                            <div className="mt-5">
+                                <AIcvgenerated/>
+                            </div>
+
                             </CardContent>
                         </Card>
+                        </div>
+                        
                     </div>
                     
                     {/* Generate Button and Options */}

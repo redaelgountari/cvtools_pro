@@ -26,14 +26,15 @@ export default function AnalyseResults() {
       if (storedData) {
         console.log("storedData :", storedData);
         setResponse(storedData);
-        setUserImages(getFromStorage('userImage') || []);
+        setUserImages(storedData?.image);
       }
     } else {
       setResponse(AnlysedCV);
+      setUserImages(AnlysedCV?.image);
     }
   }, [AnlysedCV]);
 
-  const handleSubmit = (e : any) => {
+  const handleSubmit = async (e : any) => {
     e.preventDefault();
     setLoading(true);
     
@@ -41,8 +42,8 @@ export default function AnalyseResults() {
       if (response) {
         setAnlysedCV(response);
         
-        saveToStorage('userData', response);
-        saveToStorage('userImage', userImages);
+        await saveToStorage('userData', response);
+        await saveToStorage('userImage', userImages);
         
         setError('');
       }
@@ -88,7 +89,7 @@ export default function AnalyseResults() {
     }
   };
 
-  const handleAddMoreImages = () => {
+  const handleAddMoreImages = async () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';

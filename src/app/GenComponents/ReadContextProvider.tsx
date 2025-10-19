@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { ReadContext } from "./ReadContext";
 import {
   getFromStorage,
-  saveImageToStorage,
   saveSettings,
   saveToStorage,
 } from "@/Cookiesmv";
@@ -43,41 +42,43 @@ function ReadContextProviderInner({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
 
   useEffect(() => {
-    const saveData = async () => {
-      if (!AnlysedCV || !userinfos) return;
+  const saveData = async () => {
+   
+    await saveToStorage(userinfos, AnlysedCV, 7);
 
-      saveToStorage("userData", AnlysedCV, 7);
+    try {
+      await axios.post("/api/storeuserdata", {
+        userData: AnlysedCV,
+        userId: userinfos,
+      });
+    } catch (err) {
+      console.error("Error storing user data:", err);
+    }
+  };
 
-      try {
-        await axios.post("/api/storeuserdata", {
-          userData: AnlysedCV,
-          userId: userinfos,
-        });
-      } catch (err) {
-        console.error("Error storing user data:", err);
-      }
-    };
+  saveData();
+}, [AnlysedCV, userinfos]);
 
-    saveData();
-  }, [AnlysedCV, userinfos]);
 
   useEffect(() => {
     const loadUserData = async () => {
-      if (!userinfos) return;
+      console.log("ddddq7777:",await getFromStorage("userData"))
 
+      if (!userinfos) return;
       try {
-        const saved = getFromStorage("userData");
+        const saved = null;
 
         if (saved) {
           setAnlysedCV(normalizeData(saved));
         } else {
-          const userId =
-            typeof userinfos === "object" ? userinfos.id : userinfos;
+          const userId = userinfos;
           const { data } = await axios.get("/api/GettingUserData", {
             params: { userId },
           });
+          console.log("dtrrr877 :",normalizeData(data.data))
+          setAnlysedCV(normalizeData(data.data));
+          await saveToStorage(userinfos, normalizeData(data.data), 7);
 
-          setAnlysedCV(normalizeData(data));
         }
       } catch (err) {
         console.error("Error loading user data:", err);
@@ -92,12 +93,6 @@ function ReadContextProviderInner({ children }: { children: React.ReactNode }) {
     const saved = getFromStorage("Settings");
     if (saved) setSettings(saved);
   }, []);
-
-  useEffect(() => {
-    if (userData?.image) {
-      saveImageToStorage("userImage", userData.image as string, 7);
-    }
-  }, [userData]);
 
   useEffect(() => {
     if (settings) {
@@ -119,7 +114,7 @@ function ReadContextProviderInner({ children }: { children: React.ReactNode }) {
         AnlysedCV,
         setAnlysedCV,
         settings,
-        setSettings,
+        setSettings,  
         userinfos,
         setUserinfos,
       }}
