@@ -148,7 +148,8 @@ function ReadTXT() {
           "description": "",
           "technologiesUsed": [],
           "github": "",
-          "role": ""
+          "role": "",
+          "image":""
         }
       ],
       "onlinePresence": {

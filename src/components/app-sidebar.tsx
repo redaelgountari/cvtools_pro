@@ -69,6 +69,10 @@ const data = {
           url: "/Resume",
         },
         {
+          title: "Portfolio",
+          url: "/portfolios",
+        },
+        {
           title: "Settings",
           url: "/Settings",
         },

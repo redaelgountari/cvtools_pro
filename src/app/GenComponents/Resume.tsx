@@ -218,81 +218,116 @@ export default function Resume() {
         ),
     });
 
-    // Generate resume content
-    const generateResume = async () => {
-        if (!rawResponse) {
-            setError('Please provide your CV data first before generating a resume.');
-            return;
-        }
-        if(!jobAnnouncement && resumeData){
-            setResumeData(resumeData);
-            setShowSuccess(true);
-            return;
-        }
+// Replace your generateResume function with this fixed version:
 
-        setLoading(true);
-        setError('');
+const generateResume = async () => {
+    if (!rawResponse) {
+        setError('Please provide your CV data first before generating a resume.');
+        return;
+    }
+    if(!jobAnnouncement && resumeData){
+        setResumeData(resumeData);
+        setShowSuccess(true);
+        return;
+    }
 
-        try {
-            // Create dynamic prompt based on settings
-            const prompt = `
-            You are a highly skilled professional resume writer specializing in crafting ${
-                Settings?.atsOptimized ? 'ATS-optimized and' : ''
-            } modern, professional resumes that maximize job-seeker success.
-            
-            ### USER DATA:
-            ${rawResponse}
-            
-            ${jobAnnouncement ? `### JOB DESCRIPTION:\n${jobAnnouncement}\n` : ''}
-            
-            ### INSTRUCTIONS:
-            1. **Create a polished, professional, and modern${
-                Settings?.atsOptimized ? ' ATS-optimized' : ''
-            } resume** based on the user's provided data.
-            2. **Highlight key skills, experiences, and achievements** that best align with the user's career goals.
-            3. **Use strong action verbs and quantify achievements** wherever possible to enhance impact.
-            4. **Ensure a logical and structured flow**, improving readability and eliminating redundancies.
-            5. **Format the resume into clear sections**, ensuring consistency in styling and structure.
-            ${jobAnnouncement ? '6. **Tailor the resume to match the provided job description** by emphasizing relevant qualifications.\n' : ''}
-            ${Settings?.showLineLimit ? `7. **Keep each bullet point within approximately ${Settings.lineLimit} words** to ensure clarity and conciseness.\n` : ''}
-            8. **Deliver the resume in a clean, structured Markdown format** for easy conversion to PDF or Word.
-            9. **Make the resume compelling, concise, and results-oriented**, effectively showcasing the candidate's strengths.
-            10. **Write the resume in ${Settings?.selectedLanguage || 'French'}.
+    setLoading(true);
+    setError('');
 
-            ### SPECIAL HANDLING:
-            - **Include only valid and relevant information.**  
-            - **Remove placeholders or irrelevant entries** such as "[Your LinkedIn Profile URL]", "N/A", "null", or "Not Provided."  
-            - **If a section (e.g., Certifications, Portfolio) has no valid data, omit it entirely** rather than leaving it blank.  
-            
-            ### OUTPUT FORMAT:
-            Ensure the resume follows this structured JSON format for alignment with the job offer:  
-            \`\`\`json
-            ${JSON.stringify(resumeData, null, 2)}
-            \`\`\`
-            `;
-            
-            const { data } = await axios.post("/api/gemini", { userData: prompt });
-            const cleanedData = data.text
-                .replace(/```json|```/g, '') 
-                .trim(); 
+    try {
+        const prompt = `
+        You are a highly skilled professional resume writer specializing in crafting ${
+            Settings?.atsOptimized ? 'ATS-optimized and' : ''
+        } modern, professional resumes that maximize job-seeker success.
         
-            setResumeOutput(cleanedData);
-            setResumeData(JSON.parse(cleanedData));
-            setShowSuccess(true);
-            setTimeout(() => {
-                setShowSuccess(false);
-                setActiveTab('preview'); 
-            }, 1500);
-            console.log("Cleaned data:", JSON.parse(cleanedData));
-            console.log("selectedLanguage:", Settings?.selectedLanguage);
+        ### USER DATA:
+        ${rawResponse}
+        
+        ${jobAnnouncement ? `### JOB DESCRIPTION:\n${jobAnnouncement}\n` : ''}
+        
+        ### INSTRUCTIONS:
+        1. **Create a polished, professional, and modern${
+            Settings?.atsOptimized ? ' ATS-optimized' : ''
+        } resume** based on the user's provided data.
+        2. **Highlight key skills, experiences, and achievements** that best align with the user's career goals.
+        3. **Use strong action verbs and quantify achievements** wherever possible to enhance impact.
+        4. **Ensure a logical and structured flow**, improving readability and eliminating redundancies.
+        5. **Format the resume into clear sections**, ensuring consistency in styling and structure.
+        ${jobAnnouncement ? '6. **Tailor the resume to match the provided job description** by emphasizing relevant qualifications.\n' : ''}
+        ${Settings?.showLineLimit ? `7. **Keep each bullet point within approximately ${Settings.lineLimit} words** to ensure clarity and conciseness.\n` : ''}
+        8. **Deliver the resume in a clean, structured JSON format** for easy conversion to PDF or Word.
+        9. **Make the resume compelling, concise, and results-oriented**, effectively showcasing the candidate's strengths.
+        10. **Write the resume in ${Settings?.selectedLanguage || 'French'}.**
 
-        } catch (error) {
-            console.error('Error generating resume:', error);
-            setError(error instanceof Error ? error.message : 'Failed to generate resume. Please try again.');
-        } finally {
-            setLoading(false);
+        ### SPECIAL HANDLING:
+        - **Include only valid and relevant information.**  
+        - **Remove placeholders or irrelevant entries** such as "[Your LinkedIn Profile URL]", "N/A", "null", or "Not Provided."  
+        - **If a section (e.g., Certifications, Portfolio) has no valid data, omit it entirely** rather than leaving it blank.  
+        
+        ### OUTPUT FORMAT:
+        **IMPORTANT: Return ONLY valid JSON. Do not wrap the response in markdown code blocks or add any text before or after the JSON.**
+        
+        The JSON structure should follow this format:
+        ${JSON.stringify(resumeData, null, 2)}
+        `;
+        
+        const { data } = await axios.post("/api/gemini", { userData: prompt,
+                useCase: 'Analyse-resume',
+                jobDescription: jobAnnouncement
+         });
+        
+        // Enhanced cleaning to handle various markdown formats
+        let cleanedData = data.text.trim();
+        
+        // Remove markdown code blocks with any language identifier
+        cleanedData = cleanedData.replace(/```[\w]*\n?/g, '');
+        cleanedData = cleanedData.replace(/```/g, '');
+        
+        // Remove any leading/trailing whitespace
+        cleanedData = cleanedData.trim();
+        
+        // Find the first { and last } to extract just the JSON
+        const firstBrace = cleanedData.indexOf('{');
+        const lastBrace = cleanedData.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1) {
+            cleanedData = cleanedData.substring(firstBrace, lastBrace + 1);
         }
-    };
+        
+        console.log("Raw response:", data.text);
+        console.log("Cleaned data:", cleanedData);
+        
+        // Parse the JSON
+        const parsedData = JSON.parse(cleanedData);
+        
+        setResumeOutput(cleanedData);
+        setResumeData(parsedData);
+        setShowSuccess(true);
+        setTimeout(() => {
+            setShowSuccess(false);
+            setActiveTab('preview'); 
+        }, 1500);
+        console.log("Parsed resume data:", parsedData);
+        console.log("Selected language:", Settings?.selectedLanguage);
+
+    } catch (error) {
+        console.error('Error generating resume:', error);
+        
+        // More detailed error message
+        let errorMessage = 'Failed to generate resume. ';
+        if (error instanceof SyntaxError) {
+            errorMessage += 'The AI returned invalid data. Please try again.';
+        } else if (error instanceof Error) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Please try again.';
+        }
+        
+        setError(errorMessage);
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Handle export
     const handleExport = async (format) => {

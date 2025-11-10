@@ -62,7 +62,8 @@ export default function Analyse() {
       console.log("Sending data to API:", userData);
 
       const { data } = await axios.post("/api/gemini", { 
-        userData: userData.text 
+        userData: userData.text,
+        useCase: 'Analyse-resume',
       });
       console.log("dtsll :",data)
 

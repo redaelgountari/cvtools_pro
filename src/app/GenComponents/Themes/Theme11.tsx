@@ -193,39 +193,32 @@ const theme = {
 
 const createStyles = (theme) => {
   const { colors, layout, typography } = {
-    colors: {
-    primary: '#2D3748',           // Dark gray for main content headings
-    primaryLight: '#4A5568',      // Medium gray
-    secondary: '#718096',         // Light gray
-    background: '#FFFFFF',        // White main background
-    sidebarBg: '#2D3748',         // 🔥 DARK sidebar background
-    text: '#2D3748',              // Dark text for main content
-    textLight: '#718096',         // Gray text for main content
-    accent: '#2D3748',            // Dark accent for lines
-    border: '#E2E8F0',           // Light border for main content
-    timelineDot: '#2D3748',       // Dark timeline dots
-    timelineLine: '#E2E8F0',      // Light timeline line
-    // 🔥 NEW: Sidebar-specific colors
-    sidebarText: '#FFFFFF',       // WHITE text for dark sidebar
-    sidebarTextLight: '#CBD5E0',  // Light gray text for sidebar
-    sidebarAccent: '#FFFFFF'      // White accents for sidebar
-  },
-  layout: {
-    sidebarWidth: '35%',          // 🔥 Wider sidebar (35% like in image)
-    mainWidth: '65%',             // 65% for main content
-    hasSidebar: true,
-    headerStyle: 'sidebar',       // 🔥 NEW: Header goes in sidebar
-    profileInSidebar: true        // 🔥 Profile photo in sidebar
-  },
-  typography: {
-    nameSize: 24,                 // Large name in sidebar
-    titleSize: 12,                // Job title in sidebar
-    headingSize: 16,              // Section headings
-    bodySize: 10,                 // Body text
-    smallSize: 9,                 // Small details
-    sidebarNameSize: 28,          // 🔥 Special: Name size in sidebar
-    sidebarTitleSize: 14          // 🔥 Special: Title size in sidebar
-  }
+   colors: {
+      primary: '#1E3A8A',
+      primaryLight: '#3B82F6',
+      secondary: '#059669',
+      background: '#FFFFFF',
+      sidebarBg: '#F8FAFC',
+      text: '#1F2937',
+      textLight: '#6B7280',
+      accent: '#DC2626',
+      border: '#D1D5DB',
+      timelineDot: '#1E3A8A',
+      timelineLine: '#D1D5DB'
+    },
+    layout: {
+      sidebarWidth: '28%',
+      mainWidth: '72%',
+      hasSidebar: true,
+      headerStyle: 'professional'
+    },
+    typography: {
+      nameSize: 25,
+      titleSize: 12,
+      headingSize: 15,
+      bodySize: 10,
+      smallSize: 9
+    }
 };
   
   return StyleSheet.create({
@@ -272,6 +265,7 @@ const createStyles = (theme) => {
     profileImageContainer: {
       width: 80,
       height: 80,
+      marginLeft: 20,
       borderRadius: layout.headerStyle === 'artistic' ? 20 : 60,
       backgroundColor: colors.background,
       overflow: 'hidden',
@@ -639,7 +633,7 @@ export default function AdaptiveResume({ userdata, userImage, themeName = 'moder
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.profileImageContainer}>
-        {userImage && <Image style={styles.profileImage} src={userImage} />}
+        {userdata.image && <Image style={styles.profileImage} src={userdata.image[0]} />}
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.name}>

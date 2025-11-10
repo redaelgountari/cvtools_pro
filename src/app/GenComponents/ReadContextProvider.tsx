@@ -62,7 +62,6 @@ function ReadContextProviderInner({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const loadUserData = async () => {
-      console.log("ddddq7777:",await getFromStorage("userData"))
 
       if (!userinfos) return;
       try {
@@ -75,7 +74,6 @@ function ReadContextProviderInner({ children }: { children: React.ReactNode }) {
           const { data } = await axios.get("/api/GettingUserData", {
             params: { userId },
           });
-          console.log("dtrrr877 :",normalizeData(data.data))
           setAnlysedCV(normalizeData(data.data));
           await saveToStorage(userinfos, normalizeData(data.data), 7);
 
@@ -90,8 +88,13 @@ function ReadContextProviderInner({ children }: { children: React.ReactNode }) {
   }, [userinfos]);
 
   useEffect(() => {
-    const saved = getFromStorage("Settings");
-    if (saved) setSettings(saved);
+    const loadSettings = async () => {
+      const saved = await getFromStorage("Settings");
+      if (saved) setSettings(saved);
+      console.log("saved 11:", saved);
+    };
+
+    loadSettings();
   }, []);
 
   useEffect(() => {

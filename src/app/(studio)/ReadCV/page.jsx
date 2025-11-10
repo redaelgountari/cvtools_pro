@@ -14,11 +14,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import ReadTXT from "../GenComponents/ReadTXT"
-import Analyse from "../GenComponents/Analyse"
-import ReadContextProvider from '../GenComponents/ReadContextProvider'
+import ReadTXT from "../../GenComponents/ReadTXT"
+import Analyse from "../../GenComponents/Analyse"
+import ReadContextProvider from '../../GenComponents/ReadContextProvider'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import SearchResults from "../GenComponents/SearchResults"
+import SearchResults from "../../GenComponents/SearchResults"
 import { useState } from "react"
 
 export default function Page() {

@@ -28,7 +28,7 @@ export default function page() {
  
       </TabsContent>
     </Tabs> */}
-    <Register/>
+    <Login/>
         
     </div>
   )

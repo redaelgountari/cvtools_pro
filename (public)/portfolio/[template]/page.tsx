@@ -1,3 +1,5 @@
+"use client"
+
 // src/app/portfolio/[template]/page.tsx
 import fs from "fs";
 import path from "path";
@@ -7,7 +9,6 @@ async function getResumeData() {
   const res = await fetch("http://localhost:3000/api/GettingUserData", {
     cache: "no-store", // Ensure fresh data on each request
   });
-
 
 
   return res.json();

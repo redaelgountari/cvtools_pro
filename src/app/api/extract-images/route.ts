@@ -14,6 +14,52 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 })
 
+const IMAGE_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+  'image/svg+xml',
+  'image/tiff'
+]
+
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.tiff', '.tif']
+
+function isImageFile(file: File): boolean {
+  const fileName = file.name.toLowerCase()
+  const hasImageExtension = IMAGE_EXTENSIONS.some(ext => fileName.endsWith(ext))
+  const hasImageMimeType = IMAGE_MIME_TYPES.includes(file.type)
+  
+  return hasImageExtension || hasImageMimeType
+}
+
+async function uploadImageToCloudinary(file: File): Promise<{ filename: string; url: string; mimeType: string }> {
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  
+  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder: "uploaded_images",
+        public_id: file.name.replace(/\.[^/.]+$/, ""),
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) reject(error)
+        else resolve(result as { secure_url: string })
+      }
+    ).end(buffer)
+  })
+
+  return {
+    filename: file.name,
+    url: uploadResult.secure_url,
+    mimeType: file.type || 'image/jpeg',
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -22,8 +68,34 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
+
+    // Handle image files
+    if (isImageFile(file)) {
+      try {
+        const uploadedImage = await uploadImageToCloudinary(file)
+        
+        return NextResponse.json({
+          message: "Image uploaded successfully.",
+          files: [uploadedImage],
+          debug: {
+            fileType: "image",
+            originalFilename: file.name,
+            mimeType: file.type,
+          },
+        })
+      } catch (uploadError) {
+        return NextResponse.json(
+          {
+            error: `Error uploading image: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`,
+          },
+          { status: 500 },
+        )
+      }
+    }
+
+    // Handle PDF files
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      return NextResponse.json({ error: "Invalid file type. Please upload a PDF." }, { status: 400 })
+      return NextResponse.json({ error: "Invalid file type. Please upload a PDF or image file." }, { status: 400 })
     }
 
     const arrayBuffer = await file.arrayBuffer()
@@ -33,6 +105,18 @@ export async function POST(request: NextRequest) {
     const pageCount = pdfDoc.getPageCount()
 
     const images = await extractImagesFromPDF(pdfDoc, buffer)
+
+    if (images.length === 0) {
+      return NextResponse.json({
+        message: "PDF processed successfully, but no images were found.",
+        files: [],
+        debug: {
+          totalPages: pageCount,
+          totalImagesFound: 0,
+          successfulProcessing: 0,
+        },
+      })
+    }
 
     const extractedFiles: { filename: string; url: string; mimeType: string }[] = []
 
@@ -61,17 +145,13 @@ export async function POST(request: NextRequest) {
           url: uploadResult.secure_url,
           mimeType,
         })
-
       } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError)
+        continue
       }
     }
 
     return NextResponse.json({
-      message:
-        images.length === 0
-          ? "PDF processed successfully, but no images were found."
-          : `Successfully extracted ${extractedFiles.length} image(s).`,
+      message: `Successfully extracted ${extractedFiles.length} image(s).`,
       files: extractedFiles,
       debug: {
         totalPages: pageCount,
@@ -82,8 +162,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: `Error processing PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
-        details: error instanceof Error ? error.stack : undefined,
+        error: `Error processing file: ${error instanceof Error ? error.message : "Unknown error"}`,
       },
       { status: 500 },
     )
@@ -95,106 +174,126 @@ async function extractImagesFromPDF(
   buffer: Buffer,
 ): Promise<Array<{ data: Buffer; ext: string; width?: number; height?: number }>> {
   const images: Array<{ data: Buffer; ext: string; width?: number; height?: number }> = []
+  const seenHashes = new Set<string>()
 
   try {
     const indirectObjects = pdfDoc.context.indirectObjects
-    let objectsChecked = 0
-    let imagesFoundInObjects = 0
 
     for (const [ref, obj] of indirectObjects.entries()) {
-      objectsChecked++
-
       try {
-        if (obj && typeof obj === "object" && "dict" in obj && "contents" in obj) {
-          const stream = obj as any
-          const dict = stream.dict
+        if (!obj || typeof obj !== "object" || !("dict" in obj) || !("contents" in obj)) {
+          continue
+        }
 
-          if (dict && dict.get) {
-            const subtype = dict.get(pdfDoc.context.obj("Subtype"))
+        const stream = obj as any
+        const dict = stream.dict
 
-            if (subtype && subtype.toString() === "/Image") {
-              imagesFoundInObjects++
+        if (!dict || !dict.get) {
+          continue
+        }
 
-              try {
-                const width = dict.get(pdfDoc.context.obj("Width"))
-                const height = dict.get(pdfDoc.context.obj("Height"))
-                const filter = dict.get(pdfDoc.context.obj("Filter"))
-                const colorSpace = dict.get(pdfDoc.context.obj("ColorSpace"))
-                const imageData = stream.contents
+        const subtype = dict.get(pdfDoc.context.obj("Subtype"))
 
-                const filterStr = filter ? filter.toString() : ""
+        if (!subtype || subtype.toString() !== "/Image") {
+          continue
+        }
 
-                if (filterStr.includes("DCTDecode")) {
-                  const format = detectImageFormat(imageData)
-                  if (format === "jpg") {
-                    images.push({
-                      data: Buffer.from(imageData),
-                      ext: "jpg",
-                      width: width ? Number(width.toString()) : undefined,
-                      height: height ? Number(height.toString()) : undefined,
-                    })
-                  }
-                } else if (filterStr.includes("FlateDecode")) {
-                  try {
-                    const decompressed = await inflate(Buffer.from(imageData))
-                    const pngData = await convertRawToPNG(
-                      decompressed,
-                      width ? Number(width.toString()) : 0,
-                      height ? Number(height.toString()) : 0,
-                      colorSpace?.toString(),
-                    )
+        const width = dict.get(pdfDoc.context.obj("Width"))
+        const height = dict.get(pdfDoc.context.obj("Height"))
+        const filter = dict.get(pdfDoc.context.obj("Filter"))
+        const colorSpace = dict.get(pdfDoc.context.obj("ColorSpace"))
+        const imageData = stream.contents
 
-                    if (pngData) {
-                      images.push({
-                        data: pngData,
-                        ext: "png",
-                        width: width ? Number(width.toString()) : undefined,
-                        height: height ? Number(height.toString()) : undefined,
-                      })
-                    }
-                  } catch (decompressError) {
-                  }
-                } else if (filterStr.includes("JPXDecode")) {
-                  images.push({
-                    data: Buffer.from(imageData),
-                    ext: "jp2",
-                    width: width ? Number(width.toString()) : undefined,
-                    height: height ? Number(height.toString()) : undefined,
-                  })
-                } else if (!filter || filterStr === "/null") {
-                  try {
-                    const pngData = await convertRawToPNG(
-                      imageData,
-                      width ? Number(width.toString()) : 0,
-                      height ? Number(height.toString()) : 0,
-                      colorSpace?.toString(),
-                    )
+        if (!imageData || imageData.length === 0) {
+          continue
+        }
 
-                    if (pngData) {
-                      images.push({
-                        data: pngData,
-                        ext: "png",
-                        width: width ? Number(width.toString()) : undefined,
-                        height: height ? Number(height.toString()) : undefined,
-                      })
-                    }
-                  } catch (convertError) {
-                  }
-                }
-              } catch (imageError) {
+        const w = width ? Number(width.toString()) : 0
+        const h = height ? Number(height.toString()) : 0
+
+        if (w < 10 || h < 10 || w > 10000 || h > 10000) {
+          continue
+        }
+
+        const filterStr = filter ? filter.toString() : ""
+        let extractedImage: { data: Buffer; ext: string; width?: number; height?: number } | null = null
+
+        if (filterStr.includes("DCTDecode")) {
+          const format = detectImageFormat(imageData)
+          if (format === "jpg" && isValidJPEG(imageData)) {
+            extractedImage = {
+              data: Buffer.from(imageData),
+              ext: "jpg",
+              width: w,
+              height: h,
+            }
+          }
+        } else if (filterStr.includes("FlateDecode")) {
+          try {
+            const decompressed = await inflate(Buffer.from(imageData))
+            const pngData = await convertRawToPNG(decompressed, w, h, colorSpace?.toString())
+
+            if (pngData && pngData.length > 1000) {
+              extractedImage = {
+                data: pngData,
+                ext: "png",
+                width: w,
+                height: h,
               }
             }
+          } catch (decompressError) {
+            continue
+          }
+        } else if (filterStr.includes("JPXDecode")) {
+          if (imageData.length > 1000) {
+            extractedImage = {
+              data: Buffer.from(imageData),
+              ext: "jp2",
+              width: w,
+              height: h,
+            }
+          }
+        } else if (!filter || filterStr === "/null") {
+          try {
+            const pngData = await convertRawToPNG(imageData, w, h, colorSpace?.toString())
+
+            if (pngData && pngData.length > 1000) {
+              extractedImage = {
+                data: pngData,
+                ext: "png",
+                width: w,
+                height: h,
+              }
+            }
+          } catch (convertError) {
+            continue
+          }
+        }
+
+        if (extractedImage) {
+          const hash = simpleHash(extractedImage.data)
+          if (!seenHashes.has(hash)) {
+            seenHashes.add(hash)
+            images.push(extractedImage)
           }
         }
       } catch (objError) {
+        continue
       }
     }
 
     if (images.length === 0) {
       const binaryImages = extractImagesByPattern(buffer)
-      images.push(...binaryImages)
+      for (const img of binaryImages) {
+        const hash = simpleHash(img.data)
+        if (!seenHashes.has(hash)) {
+          seenHashes.add(hash)
+          images.push(img)
+        }
+      }
     }
   } catch (error) {
+    return images
   }
 
   return images
@@ -207,6 +306,10 @@ async function convertRawToPNG(
   colorSpace?: string,
 ): Promise<Buffer | null> {
   try {
+    if (!width || !height || width < 1 || height < 1) {
+      return null
+    }
+
     const { createCanvas } = await import("canvas")
 
     let channels = 3
@@ -223,7 +326,7 @@ async function convertRawToPNG(
 
     const expectedSize = width * height * channels
 
-    if (rawData.length < expectedSize * 0.9 || rawData.length > expectedSize * 1.1) {
+    if (rawData.length < expectedSize * 0.8 || rawData.length > expectedSize * 1.2) {
       return null
     }
 
@@ -233,7 +336,7 @@ async function convertRawToPNG(
 
     if (isGrayscale) {
       for (let i = 0; i < width * height; i++) {
-        const gray = rawData[i]
+        const gray = rawData[i] || 0
         imageData.data[i * 4] = gray
         imageData.data[i * 4 + 1] = gray
         imageData.data[i * 4 + 2] = gray
@@ -241,18 +344,18 @@ async function convertRawToPNG(
       }
     } else if (channels === 3) {
       for (let i = 0; i < width * height; i++) {
-        imageData.data[i * 4] = rawData[i * 3]
-        imageData.data[i * 4 + 1] = rawData[i * 3 + 1]
-        imageData.data[i * 4 + 2] = rawData[i * 3 + 2]
+        imageData.data[i * 4] = rawData[i * 3] || 0
+        imageData.data[i * 4 + 1] = rawData[i * 3 + 1] || 0
+        imageData.data[i * 4 + 2] = rawData[i * 3 + 2] || 0
         imageData.data[i * 4 + 3] = 255
       }
     } else if (channels === 4) {
       if (colorSpace?.includes("CMYK")) {
         for (let i = 0; i < width * height; i++) {
-          const c = rawData[i * 4] / 255
-          const m = rawData[i * 4 + 1] / 255
-          const y = rawData[i * 4 + 2] / 255
-          const k = rawData[i * 4 + 3] / 255
+          const c = (rawData[i * 4] || 0) / 255
+          const m = (rawData[i * 4 + 1] || 0) / 255
+          const y = (rawData[i * 4 + 2] || 0) / 255
+          const k = (rawData[i * 4 + 3] || 0) / 255
 
           imageData.data[i * 4] = Math.round(255 * (1 - c) * (1 - k))
           imageData.data[i * 4 + 1] = Math.round(255 * (1 - m) * (1 - k))
@@ -260,8 +363,8 @@ async function convertRawToPNG(
           imageData.data[i * 4 + 3] = 255
         }
       } else {
-        for (let i = 0; i < rawData.length; i++) {
-          imageData.data[i] = rawData[i]
+        for (let i = 0; i < Math.min(rawData.length, imageData.data.length); i++) {
+          imageData.data[i] = rawData[i] || 0
         }
       }
     }
@@ -277,16 +380,20 @@ async function convertRawToPNG(
 function detectImageFormat(data: Uint8Array | Buffer): string | null {
   const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data)
 
-  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+  if (buffer.length < 4) {
+    return null
+  }
+
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
     return "jpg"
   }
-  if (buffer.length >= 4 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
     return "png"
   }
-  if (buffer.length >= 3 && buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
     return "gif"
   }
-  if (buffer.length >= 2 && buffer[0] === 0x42 && buffer[1] === 0x4d) {
+  if (buffer[0] === 0x42 && buffer[1] === 0x4d) {
     return "bmp"
   }
   if (
@@ -300,41 +407,102 @@ function detectImageFormat(data: Uint8Array | Buffer): string | null {
   return null
 }
 
-function extractImagesByPattern(buffer: Buffer): Array<{ data: Buffer; ext: string }> {
-  const images: Array<{ data: Buffer; ext: string }> = []
+function isValidJPEG(data: Uint8Array | Buffer): boolean {
+  const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data)
+  
+  if (buffer.length < 10) {
+    return false
+  }
 
-  for (let i = 0; i < buffer.length - 3; i++) {
-    if (buffer[i] === 0xff && buffer[i + 1] === 0xd8 && buffer[i + 2] === 0xff) {
-      for (let j = i + 3; j < buffer.length - 1; j++) {
-        if (buffer[j] === 0xff && buffer[j + 1] === 0xd9) {
-          const imageData = buffer.slice(i, j + 2)
-          if (imageData.length > 1000) {
-            images.push({ data: imageData, ext: "jpg" })
-          }
-          i = j + 2
-          break
-        }
-      }
+  if (buffer[0] !== 0xff || buffer[1] !== 0xd8 || buffer[2] !== 0xff) {
+    return false
+  }
+
+  for (let i = buffer.length - 2; i >= Math.max(0, buffer.length - 100); i--) {
+    if (buffer[i] === 0xff && buffer[i + 1] === 0xd9) {
+      return true
     }
   }
 
-  for (let i = 0; i < buffer.length - 8; i++) {
+  return false
+}
+
+function extractImagesByPattern(buffer: Buffer): Array<{ data: Buffer; ext: string }> {
+  const images: Array<{ data: Buffer; ext: string }> = []
+  const maxImages = 100
+  const minImageSize = 1000
+  const maxSearchBytes = Math.min(buffer.length, 50 * 1024 * 1024)
+
+  let i = 0
+  while (i < maxSearchBytes - 3 && images.length < maxImages) {
+    if (buffer[i] === 0xff && buffer[i + 1] === 0xd8 && buffer[i + 2] === 0xff) {
+      let foundEnd = false
+      let j = i + 3
+      const maxSearch = Math.min(i + 10 * 1024 * 1024, buffer.length - 1)
+      
+      while (j < maxSearch) {
+        if (buffer[j] === 0xff && buffer[j + 1] === 0xd9) {
+          const imageData = buffer.slice(i, j + 2)
+          if (imageData.length > minImageSize && isValidJPEG(imageData)) {
+            images.push({ data: imageData, ext: "jpg" })
+          }
+          i = j + 2
+          foundEnd = true
+          break
+        }
+        j++
+      }
+      
+      if (!foundEnd) {
+        i++
+      }
+    } else {
+      i++
+    }
+  }
+
+  i = 0
+  while (i < maxSearchBytes - 8 && images.length < maxImages) {
     if (buffer[i] === 0x89 && buffer[i + 1] === 0x50 && buffer[i + 2] === 0x4e && buffer[i + 3] === 0x47) {
-      for (let j = i + 8; j < buffer.length - 8; j++) {
+      let foundEnd = false
+      let j = i + 8
+      const maxSearch = Math.min(i + 10 * 1024 * 1024, buffer.length - 8)
+      
+      while (j < maxSearch) {
         if (
           buffer[j] === 0x49 && buffer[j + 1] === 0x45 && buffer[j + 2] === 0x4e && buffer[j + 3] === 0x44 &&
           buffer[j + 4] === 0xae && buffer[j + 5] === 0x42 && buffer[j + 6] === 0x60 && buffer[j + 7] === 0x82
         ) {
           const imageData = buffer.slice(i, j + 8)
-          if (imageData.length > 1000) {
+          if (imageData.length > minImageSize) {
             images.push({ data: imageData, ext: "png" })
           }
           i = j + 8
+          foundEnd = true
           break
         }
+        j++
       }
+      
+      if (!foundEnd) {
+        i++
+      }
+    } else {
+      i++
     }
   }
 
   return images
+}
+
+function simpleHash(buffer: Buffer): string {
+  let hash = 0
+  const step = Math.max(1, Math.floor(buffer.length / 100))
+  
+  for (let i = 0; i < buffer.length; i += step) {
+    hash = ((hash << 5) - hash) + buffer[i]
+    hash = hash & hash
+  }
+  
+  return `${hash}_${buffer.length}`
 }

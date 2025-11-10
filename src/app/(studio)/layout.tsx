@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import ReadContextProvider from "./GenComponents/ReadContextProvider";
+import { ThemeProvider } from "@/components/theme-provider";
+import ReadContextProvider from "../GenComponents/ReadContextProvider";
+import Dashboard from "../GenComponents/Dashboard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ReadContextProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Dashboard>
             {children}
+            </Dashboard>
+          </ThemeProvider>
           </ReadContextProvider>
       </body>
     </html>

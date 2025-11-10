@@ -1,5 +1,5 @@
 import React from 'react'
-import Resume from '../GenComponents/Resume'
+import Resume from '../../GenComponents/Resume'
 
 export default function page() {
   return (
